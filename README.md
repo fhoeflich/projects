@@ -1,2 +1,6 @@
-# projects
-Code for my own projects, including interview problems/solutions, kernel/driver code and patches etc.
+# Projects
+Code for my own projects, including:
+	* Interview problems and solutions
+	* Kernel/driver code
+	* Patches
+	* etc.
