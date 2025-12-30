@@ -48,7 +48,7 @@ static item_t *nip_top(deck_t *deck);
 static void tuck_bottom(item_t *tuck, deck_t *deck);
 static void init_deck(deck_t *deck, unsigned int count);
 static void one_move(deck_t *hand, deck_t *table);
-static void round(deck_t *hand, deck_t *table);
+static void do_round(deck_t *hand, deck_t *table);
 static int is_orig_deck(deck_t *deck);
 static void print_deck(char *label, deck_t *deck);
 
@@ -88,7 +88,7 @@ main(int argc, char *argv[])
             print_deck("table", &table);
         }
 
-        round(decka, deckb);
+        do_round(decka, deckb);
 
         if (is_orig_deck(deckb)) {
             /*
@@ -143,7 +143,7 @@ parse_args(int argc, char *argv[])
 static int
 usage()
 {
-    fprintf(stderr, "Usage: aifi [-d] <n>\n");
+    fprintf(stderr, "Usage: reshuffle [-d] <n>\n");
     fprintf(stderr, "  where n is a positive number of cards in the deck\n");
     exit(1);
 }
@@ -322,7 +322,7 @@ one_move(deck_t *decka, deck_t *deckb)
 }
 
 static void
-round(deck_t *decka, deck_t *deckb)
+do_round(deck_t *decka, deck_t *deckb)
 {
     extern unsigned int decksize;
 
@@ -340,12 +340,12 @@ round(deck_t *decka, deck_t *deckb)
 
     do {
         if (debug) {
-            fprintf(stderr, "Top  of round() loop\n");
+            fprintf(stderr, "Top of do_round() loop\n");
             fprintf(stderr, "=============================================\n");
         }
         one_move(decka, deckb);
         if (debug) {
-            fprintf(stderr, "Bottom of round() loop\n");
+            fprintf(stderr, "Bottom of do_round() loop\n");
             print_deck("decka", decka);
             print_deck("deckb", deckb);
         }
