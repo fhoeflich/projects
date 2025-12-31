@@ -1,7 +1,9 @@
 # Projects
 Code for my own projects, including:
 ## Interview problems and solutions
-### [Reshuffle](interview-problems/reshuffle)
+### [reshuffle](interview-problems/reshuffle)
+### [smparser](interview-problems/smparser)
+### [house-builder](interview-problems/house-builder)
 ## Kernel/driver code
 ## Education
 ## Miscellaneous
