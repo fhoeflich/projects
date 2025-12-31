@@ -6,4 +6,5 @@ Code for my own projects, including:
 ### [house-builder](interview-problems/house-builder)
 ## Kernel/driver code
 ## Education
+### [Rust](education/rust) Rust course notes, exercises, and my apps
 ## Miscellaneous
