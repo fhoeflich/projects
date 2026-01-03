@@ -20,8 +20,8 @@ fn main() {
     // compare string == != (does not equal)
     // println!("{}", "ONE".to_lowercase() == "one");
 
-    // let rust = "\x52\x75\x73\x74";
-    // println!("{}", rust);
+    let rust = "\x52\x75\x73\x74";
+    println!("{}", rust);
 
 
 	// Some practice on other string/slice methods from the Rust
@@ -41,8 +41,8 @@ fn main() {
 	// assert!(!bananas.starts_with(['b', 'a', 'n', 'a']));
 	// assert!(bananas.starts_with(&['a', 'b', 'c', 'd']));
 
-	let x = &[5, 7];
-	let y = x.clone();
+	// let x = &[5, 7];
+	// let y = x.clone();
 
-	println!("x = {:?}, y = {:?}", x, y);
+	// println!("x = {:?}, y = {:?}", x, y);
 }
