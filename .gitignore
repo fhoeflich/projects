@@ -1,4 +1,6 @@
 # .gitignore for projects
 #########################
+/target
 reshuffle
 smparser
+Cargo.*
