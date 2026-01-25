@@ -63,15 +63,15 @@ fn main() {
     // bheap.pop();
     // println!("After 2nd pop, bheap is: {:?}", bheap);
 
-    let mut hm = HashMap::new();
+    // let mut hm = HashMap::new();
 
-    hm.insert(1, 1);
-    hm.insert(5, 2);
-    hm.insert(30, 3);
-    let old = hm.insert(30, 4); // key is going to upddate the old value of 3 to the new value of 4. also, going to return the old value
+    // hm.insert(1, 1);
+    // hm.insert(5, 2);
+    // hm.insert(30, 3);
+    // let old = hm.insert(30, 4); // key is going to upddate the old value of 3 to the new value of 4. also, going to return the old value
 
-    println!("{:?}", hm);
-    println!("Old value: {:?}", old);
+    // println!("{:?}", hm);
+    // println!("Old value: {:?}", old);
 
     // println!("{}", hm.contains_key(&5));
     // println!("{:?}", hm.get(&5)); //returned Option<T>
@@ -83,10 +83,9 @@ fn main() {
     // println!("{:?}", remove);
 
     // hm.clear();
-
     // println!("{}", hm.is_empty());
 
-    // let mut hs = HashSet::new();
+    let mut hs = HashSet::new();
 
     // len()
     // is_empty()
