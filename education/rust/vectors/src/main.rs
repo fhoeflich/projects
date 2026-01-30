@@ -25,7 +25,7 @@ fn main() {
     println!("{:?}", one);
 
     // .last
-    // .first_mut and .last_mut, so will borrow mutuable references
+    // .first_mut and .last_mut, so will borrow mutable references
 
     println!("{}", nums.len()); // return a value of the length
     println!("{}", nums.is_empty()); //bool 
