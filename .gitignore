@@ -3,4 +3,4 @@
 /target
 reshuffle
 smparser
-Cargo.*
+Cargo.lock
