@@ -1,6 +1,6 @@
 Sample applications needed for portfolio:
-1. ftrace/OpenDTrace on some app demonstrating location of kernel hot spot(s)
-	or bug(s)
+1. ftrace/OpenDTrace scripting on some target app demonstrating location of
+	kernel hot spot(s) or bug(s)
 2. eBPF
 3. Simple Rust sample app:
 	A. You make regular trips to your bank once a week on Saturdays
@@ -8,6 +8,7 @@ Sample applications needed for portfolio:
 	B. You refill your hummingbird feeder once a month, always on the 25th.
 		Write a program to determine on which dates you will do BOTH tasks
 		over the 5 years from Jan 2026 through Dec 2030.
+4. DPDK EAL
 
 Interview problems:
 1. Rust implementation of DSA algorithms for BSTs
