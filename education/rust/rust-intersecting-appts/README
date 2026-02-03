@@ -1,8 +1,0 @@
-Simple Rust training project.
-
-1. You make regular trips to your bank once a week on Saturdays
-		starting 1/3/26.	
-2. You refill your hummingbird feeder once a month, always on the 25th.
-
-Write a program to determine on which dates you will do BOTH tasks over the 5
-years from Jan 2026 through Dec 2030.
