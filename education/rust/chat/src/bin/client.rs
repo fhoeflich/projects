@@ -1,19 +1,25 @@
-use async_std::io::BufReader;
+// use async_std::io::BufReader;
 use async_std::prelude::*;
 use async_std::{task,io,net};
 use std::sync::Arc;
+// use futures_lite::future::race;
+use futures_lite::future;
 
 use chat::utils::{self, ChatResult};
 use chat::{Client, Server};
 
-fn get_value(mut input: &str) -> Option(&str, &str)> {
+// fn get_value(mut input: &str) -> Option(&str, &str)> {
+// fn get_value(mut input: &str) -> Option(&str, &str) {
+// fn get_value(mut input: &str) -> Option<&str, &str> {
+fn get_value(mut input: &str) -> Option<(&str, &str)> {
 	input = input.trim_start();
 
 	if input.is_empty() {
 		return None;
 	}
 
-	match input.find(chat::is_whitespace) {
+	// match input.find(chat::is_whitespace) {
+	match input.find(char::is_whitespace) {
 		Some(whitespace) => Some((&input[0..whitespace], &input[whitespace..])),
 		None => Some((input, "")),
 	}
@@ -31,7 +37,7 @@ fn parse_input(line: &str) -> Option<Client> {
 		return Some(Client::Join { chat_name: Arc::new(chat.to_string()),
 		});
 	} else if input == "post" {
-		let (chat, remainder) = get_value(remainder);
+		let (chat, remainder) = get_value(remainder)?;
 		let message = remainder.trim_start().to_string();
 
 		return Some(Client::Post { chat_name: Arc::new(chat.to_string()),
@@ -52,7 +58,7 @@ async fn send(mut send: net::TcpStream) -> ChatResult<()> {
 		let opt = option_result?;
 		let req = match parse_input(&opt) {
 			Some(req) => req,
-			None => continue;
+			None => continue,
 		};
 		utils::send_json(&mut send, &req).await?;
 		send.flush().await?;
@@ -68,14 +74,14 @@ async fn messages(server: net::TcpStream) -> ChatResult<()> {
 	while let Some(msg) = stream.next().await {
 		match msg? {
 			Server::Message {chat_name, message} => {
-				println!("Chat Name: ()\n, Message: ()\n", chat_name, message);
+				println!("Chat Name: {}\n, Message: {}\n", chat_name, message);
 			}
 			Server::Error(message) => {
 				println!("Error received: {}", message);
 			}
 		}
 	}
-	OK(())
+	Ok(())
 }
 
 fn main() -> ChatResult<()> {
@@ -88,7 +94,10 @@ fn main() -> ChatResult<()> {
 		let send = send(socket.clone());
 		let replies = messages(socket);
 
-		replies.race(send).await?;
+		// replies.race(send).await?;
+		// replies.future::race(send).await?;
+		future::race(send, replies).await?;
+		// Future::race(send, replies).await?;
 
 		Ok(())
 	})
