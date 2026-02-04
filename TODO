@@ -9,6 +9,8 @@ Sample applications needed for portfolio:
 		Write a program to determine on which dates you will do BOTH tasks
 		over the 5 years from Jan 2026 through Dec 2030.
 4. DPDK EAL
+5. OpenBMC
+6. DO-178C
 
 Interview problems:
 1. Rust implementation of DSA algorithms for BSTs
