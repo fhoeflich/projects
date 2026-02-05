@@ -1,0 +1,3 @@
+I was obliged to skip this exercise because it depended upon packages external
+to the course (rustwasm) which were deprecated or whose versions are now
+mismatched when paired together (node.js, npm, etc.).
