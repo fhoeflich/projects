@@ -1,0 +1,12 @@
+I was once asked this in an interview.  I didn't manage to answer it live in
+the time allotted, but I liked the problem, took it home and finished the
+solution on my own.
+
+Given:
+* An equivalence relational operator = (e.g., X = 0, Y = A etc.);
+* A loop operator LOOP (e.g., for/while loop);
+* An addition operator (e.g., X = X + 1).
+
+Produce:
+* Given variables X and Y, produce an algorithm to generate Y = X - 1.
+  There are *no* conditional (if/then) or substraction operators available.
