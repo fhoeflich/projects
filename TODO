@@ -14,6 +14,9 @@ Sample applications needed for portfolio:
 
 Interview problems:
 1. Rust implementation of DSA algorithms for BSTs
+2. Form the custom iterator needed, plus any other ancillary machinery, to
+   bring to life the lighthearted Rust code
+   		Every(body).needs(Some(1)).to_love()
 
 Some fun items:
 1. Sudoku game (Rust/Slint exercise)
