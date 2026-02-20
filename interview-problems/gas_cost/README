@@ -1,0 +1,52 @@
+/*
+ * Gas/cost interview problem, language of your choice (I chose C).
+ *
+ * You are given two arrays gas[] and cost[], both of length n.  gas[i] is
+ * an amount (in fuel) used to drive your car to the next station (i+1).
+ * cost[i] is an amount (in fuel) that it takes to drive to that next
+ * station.
+ *
+ * You are given a template with canCompleteCircuit() and main() only, and
+ * a function prototype for canCompleteCircuit().  The rest is up to you.
+ *
+ * Write a program that attempts to make the entire circuit, starting from
+ * any i along the circuit, without running out of fuel (i.e. your total
+ * gas never goes negative).  If it can be done, exit with code 0 otherwise
+ * exit with code -1.
+ *
+ * (I did not finish the problem during the interview, but it appears that
+ * the interviewer will provide gas[] and cost[] sample data, perhaps multiple
+ * data sets of it, in order to test your program when you finish coding.)
+ */
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int canCompleteCircuit(const int *gas, const int *cost, int offset) {
+    int i;
+    int total_gas = 0;
+    int total_cost = 0;
+    
+    total_gas = gas[0];
+    for (i = offset; i < n; i++) {
+        if (total_gas < cost[i]) {
+            continue;
+        }
+        total_gas += gas[i];
+        total_cost += cost[i];
+        
+        if (i == offset-1) {
+            i = 0;
+        }
+    }
+}
+
+int main() {
+    int offset;
+ 
+    for (offset = 0; offset < n; offset++) {}
+        if canCompleteCircuit(gas, cost, offset) == 0)
+            break;
+    }
+}
