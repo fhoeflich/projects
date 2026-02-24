@@ -1,10 +1,14 @@
 This is the classic old Seven Bridges of Konigsberg problem:
 
+https://en.wikipedia.org/wiki/Seven_Bridges_of_K%C3%B6nigsberg#:~:text=The%20Seven%20Bridges%20of%20K%C3%B6nigsberg,bridges%20once%20and%20only%20once.
+
+https://wild.maths.org/bridges-k%C3%B6nigsberg-0#:~:text=In%20the%20eighteenth%20century%20the,yourself%2C%20using%20the%20picture%20below.
+
 https://old.maa.org/press/periodicals/convergence/leonard-eulers-solution-to-the-konigsberg-bridge-problem#:~:text=The%20healthy%20economy%20allowed%20the,the%20famous%20mathematician%20Leonard%20Euler.
 
 Given:
-* The town's layout in 1735 as described above;
-* The seven bridges " " " " ";
+* The town's layout in 1735 as described in the third link above;
+* The seven bridges " " " " " " " " ";
 
 Produce:
 * A program providing (exhaustive) empirical proof that there is no path that can be taken to walk across all of the bridges exactly once and end up at home.
