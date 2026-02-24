@@ -1,0 +1,12 @@
+This is the classic old Seven Bridges of Konigsberg problem:
+
+https://old.maa.org/press/periodicals/convergence/leonard-eulers-solution-to-the-konigsberg-bridge-problem#:~:text=The%20healthy%20economy%20allowed%20the,the%20famous%20mathematician%20Leonard%20Euler.
+
+Given:
+* The town's layout in 1735 as described above;
+* The seven bridges " " " " ";
+
+Produce:
+* A program providing (exhaustive) empirical proof that there is no path that can be taken to walk across all of the bridges exactly once and end up at home.
+
+I think this would be a good exercise in Rust for me, although it is really a mathematical proof rather than a programming problem.  It might make a good takehome interview problem for particularly intellectually-curious candidates.
