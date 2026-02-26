@@ -14,3 +14,10 @@ Produce:
 * A program providing (exhaustive) empirical proof that there is no path that can be taken to walk across all of the bridges exactly once and end up at home.
 
 I think this would be a good exercise in Rust for me, although it is really a mathematical proof rather than a programming problem.  It might make a good takehome interview problem for particularly intellectually-curious candidates.
+
+Extra credit:
+* Suppose one of the bridges collapses.  Is the conclusion still the same, or might there now be a way to traverse all of the bridges exactly once?  Does it matter which bridge collapses?
+
+* Suppose one new bridge is added (between a specific pair of the existing nodes).  Is the conclusion still the same?  Is the conclusion the same no matter which pair of nodes you pick?
+
+* Suppose one of the fixed bridges is replaced by a see-saw bridge.  If you approach the lower side of the see-saw, you may walk across it ... but if you approach the higher side, you cannot cross.  In this case, though, if you do cross you are constrained to return *back* across the see-saw at some point during your walk, i.e. unlike every other bridge which must be crossed *once*, the see-saw must be crossed *twice* (it is considered impolite by the locals to leave the see-saw in a different state than when you started).  And it must be crossed in the opposite direction, since that is the only way the lower side of the see-saw will be available to you (assume that no one else crosses the see-saw during your walk).  Is the conclusion still the same?
