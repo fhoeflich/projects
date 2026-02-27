@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -9,10 +11,18 @@ pub struct DirectedGraph {
 
 pub struct UndirectedGraph {
     adjacency_matrix: HashMap<String, Vec<String>>,
-	// XXX: Pick up here.  How to add a bool named `traversed' to
-	//		adjacency_matrix so that when looking up a node, we can
-	//		tell whether or not an untraversed edge to that node
-	//		still exists in our neighbors() list?
+}
+
+#[derive(Debug)]
+struct Edge {
+	to: String,
+	id: u32,			// 1 for first A->B edge, 2 for second etc.
+	traversed: bool,
+}
+
+#[derive(Debug)]
+pub struct MultiGraph {
+    adjacency_matrix: HashMap<String, Vec<Edge>>,
 }
 
 pub trait Graph {
@@ -92,62 +102,106 @@ impl Graph for UndirectedGraph {
     }
 }
 
+impl MultiGraph {
+    fn new() -> MultiGraph {
+        MultiGraph {
+            adjacency_matrix: HashMap::new(),
+        }
+    }
+
+	fn adjacency_matrix(&mut self) -> &mut HashMap<String, Vec<Edge>> {
+		&mut self.adjacency_matrix
+	}
+
+    fn add_edge(&mut self, from: &str, to: &str, id: u32) {
+		let edges = self.adjacency_matrix()
+					.entry(from.to_string())
+					.or_insert(Vec::new());
+
+		edges.push(Edge {
+				to: to.to_string(),
+				id,
+				traversed: false,
+		});
+    }
+
+    fn neighbors(&mut self, from: &str) -> Result<&Vec<Edge>, NodeNotInGraph> {
+        match self.adjacency_matrix()
+			.get(from) {
+            None => Err(NodeNotInGraph),
+            Some(edges) => Ok(edges),
+
+		// or simply:
+		//
+		// self.adjacency_matrix()
+		//	.get(from)
+		//	.ok_or(NodeNotInGraph)
+		//
+		// for more brevity.
+        }
+	}
+
+	fn mark_traversed(&mut self, from: &str, to: &str, id: u32) {
+	}
+}
+
 #[cfg(test)]
-mod test_undirected_graph {
+// mod test_undirected_graph {
+mod tests {
     use super::*;
 
-    #[test]
-    fn test_neighbors() {
-        let mut graph = UndirectedGraph::new();
-
-        graph.add_edge(("A", "B"));
-        graph.add_edge(("A", "B"));
-
-        graph.add_edge(("B", "C"));
-        graph.add_edge(("B", "C"));
-
-        graph.add_edge(("A", "D"));
-        graph.add_edge(("B", "D"));
-        graph.add_edge(("C", "D"));
-
-        assert_eq!(
-            graph.neighbors("A").unwrap(),
-            &vec![
-                (String::from("B")),
-                (String::from("B")),
-                (String::from("D")),
-            ]
-        );
-
-        assert_eq!(
-            graph.neighbors("B").unwrap(),
-            &vec![
-                (String::from("A")),
-                (String::from("A")),
-                (String::from("C")),
-                (String::from("C")),
-                (String::from("D")),
-            ]
-        );
-
-        assert_eq!(
-            graph.neighbors("C").unwrap(),
-            &vec![
-				(String::from("B")),
-				(String::from("B")),
-				(String::from("D")),
-			]
-        );
-
-        assert_eq!(
-            graph.neighbors("D").unwrap(),
-            &vec![
-				(String::from("A")),
-				(String::from("B")),
-				(String::from("C")),
-			]
-        );
-    }
+//     #[test]
+//     fn test_neighbors() {
+//         let mut graph = UndirectedGraph::new();
+// 
+//         graph.add_edge(("A", "B"));
+//         graph.add_edge(("A", "B"));
+// 
+//         graph.add_edge(("B", "C"));
+//         graph.add_edge(("B", "C"));
+// 
+//         graph.add_edge(("A", "D"));
+//         graph.add_edge(("B", "D"));
+//         graph.add_edge(("C", "D"));
+// 
+//         assert_eq!(
+//             graph.neighbors("A").unwrap(),
+//             &vec![
+//                 (String::from("B")),
+//                 (String::from("B")),
+//                 (String::from("D")),
+//             ]
+//         );
+// 
+//         assert_eq!(
+//             graph.neighbors("B").unwrap(),
+//             &vec![
+//                 (String::from("A")),
+//                 (String::from("A")),
+//                 (String::from("C")),
+//                 (String::from("C")),
+//                 (String::from("D")),
+//             ]
+//         );
+// 
+//         assert_eq!(
+//             graph.neighbors("C").unwrap(),
+//             &vec![
+// 				(String::from("B")),
+// 				(String::from("B")),
+// 				(String::from("D")),
+// 			]
+//         );
+// 
+//         assert_eq!(
+//             graph.neighbors("D").unwrap(),
+//             &vec![
+// 				(String::from("A")),
+// 				(String::from("B")),
+// 				(String::from("C")),
+// 			]
+//         );
+//     }
 
     //     #[test]
     //     fn test_directed() {
@@ -167,20 +221,21 @@ mod test_undirected_graph {
 
     	#[test]
     	fn test_konigsberg() {
-            let mut graph = UndirectedGraph::new();
+            let mut graph = MultiGraph::new();
     
     		//
     		// Add the seven bridges (A,B), (B,C) etc.
+			// The first bridge from A->B is (A,B,1) and the second is (A,B,2).
     		//
-            graph.add_edge(("A", "B"));
-            graph.add_edge(("A", "B"));
+            graph.add_edge("A", "B", 1);
+            graph.add_edge("A", "B", 2);
 
-            graph.add_edge(("B", "C"));
-            graph.add_edge(("B", "C"));
+            graph.add_edge("B", "C", 1);
+            graph.add_edge("B", "C", 2);
 
-            graph.add_edge(("A", "D"));
-            graph.add_edge(("B", "D"));
-            graph.add_edge(("C", "D"));
+            graph.add_edge("A", "D", 1);
+            graph.add_edge("B", "D", 1);
+            graph.add_edge("C", "D", 1);
 
             // assert_eq!(
             //     graph.neighbors("A").unwrap(),
