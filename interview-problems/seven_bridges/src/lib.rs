@@ -1,9 +1,11 @@
 #![allow(unused)]
 
+use std::cmp::Ordering;
+use std::any::type_name_of_val;
 use std::collections::HashMap;
 
-#[derive(Debug)]
-pub struct NodeNotInGraph; //custom error type if node is not found in graph
+#[derive(Debug, PartialEq)]
+pub struct NodeNotInGraph; 	//custom error type if node is not found in graph
 
 pub struct DirectedGraph {
     adjacency_matrix: HashMap<String, Vec<String>>,
@@ -13,15 +15,33 @@ pub struct UndirectedGraph {
     adjacency_matrix: HashMap<String, Vec<String>>,
 }
 
-#[derive(Debug)]
-struct Edge {
-	to: String,
-	id: u32,			// 1 for first A->B edge, 2 for second etc.
-	traversed: bool,
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Edge {
+    from: String,
+    to: String,
+    id: u32, // 1 for first A->B edge, 2 for second etc.
+    traversed: bool,
+}
+
+impl Ord for Edge {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other
+            .to
+            .to_string()
+            .cmp(&self.to.to_string())
+            .then_with(|| self.to.to_string().cmp(&other.to.to_string()))
+    }
+}
+
+impl PartialOrd for Edge {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 #[derive(Debug)]
 pub struct MultiGraph {
+	total_edges: u8,
     adjacency_matrix: HashMap<String, Vec<Edge>>,
 }
 
@@ -103,143 +123,267 @@ impl Graph for UndirectedGraph {
 }
 
 impl MultiGraph {
-    fn new() -> MultiGraph {
+    pub fn new() -> MultiGraph {
         MultiGraph {
+			total_edges: 7,
             adjacency_matrix: HashMap::new(),
         }
     }
 
-	fn adjacency_matrix(&mut self) -> &mut HashMap<String, Vec<Edge>> {
-		&mut self.adjacency_matrix
-	}
-
-    fn add_edge(&mut self, from: &str, to: &str, id: u32) {
-		let edges = self.adjacency_matrix()
-					.entry(from.to_string())
-					.or_insert(Vec::new());
-
-		edges.push(Edge {
-				to: to.to_string(),
-				id,
-				traversed: false,
-		});
+    fn adjacency_matrix(&mut self) -> &mut HashMap<String, Vec<Edge>> {
+        &mut self.adjacency_matrix
     }
 
-    fn neighbors(&mut self, from: &str) -> Result<&Vec<Edge>, NodeNotInGraph> {
-        match self.adjacency_matrix()
-			.get(from) {
+    pub fn add_edge(&mut self, from: &str, to: &str, id: u32, traversed: bool) {
+        let edges = self
+            .adjacency_matrix()
+            .entry(from.to_string())
+            .or_insert(Vec::new());
+
+        edges.push(Edge {
+            from: from.to_string(),
+            to: to.to_string(),
+            id,
+            traversed,
+        });
+    }
+
+	fn populate(&mut self) {
+        //
+		// Populate the Konigsberg graph:
+        // 1. Add the seven bridge edges (A,B), (B,C) etc.
+        //    The first bridge from A->B is (A,B,1) and the second is (A,B,2).
+        //    All edges are undirected/bidirectional.
+        //
+        self.add_edge("A", "B", 1, false);		// all from A
+        self.add_edge("A", "B", 2, false);
+        self.add_edge("A", "D", 1, false);
+
+        self.add_edge("B", "A", 1, false);		// all from B
+        self.add_edge("B", "A", 2, false);
+        self.add_edge("B", "C", 1, false);
+        self.add_edge("B", "C", 2, false);
+        self.add_edge("B", "D", 1, false);
+
+        self.add_edge("C", "B", 1, false);		// all from C
+        self.add_edge("C", "B", 2, false);
+        self.add_edge("C", "D", 1, false);
+
+        self.add_edge("D", "A", 1, false);		// all from D
+        self.add_edge("D", "B", 1, false);
+        self.add_edge("D", "C", 1, false);
+	}
+
+	fn display(&mut self) {
+		for (node, edgevec) in self.adjacency_matrix() {
+			// println!("node is {node}, edgevec is {edgevec:?}\n");
+			for edge in edgevec.iter() {
+				// println!("edge is {edge:?}");
+				print!("{} -> {}({})  ", edge.from, edge.to, edge.id);
+			}
+			println!("");
+		}
+	}
+
+    pub fn traverse(&mut self, from: &str, to: &str, id: u32) {
+		for (node, edgevec) in self.adjacency_matrix() {
+			// println!("node is {node}, edgevec is {edgevec:?}\n");
+			for starter_edge in edgevec.iter() {
+				// println!("starter_edge is {starter_edge:?}\n");
+				let from_char: Option<char> = starter_edge.from.chars().next();
+				match from_char {
+					Some('A'..='D') => {
+						println!("match starter_edge case {:?}", from_char);
+					}
+					_ => {
+						panic!("Node not found: {:?}", from_char);
+					}
+				}
+			}
+		}
+	}
+
+    pub fn neighbors(&mut self, from: &str) -> Result<&Vec<Edge>, NodeNotInGraph> {
+        match self.adjacency_matrix().get(from) {
             None => Err(NodeNotInGraph),
             Some(edges) => Ok(edges),
-
-		// or simply:
-		//
-		// self.adjacency_matrix()
-		//	.get(from)
-		//	.ok_or(NodeNotInGraph)
-		//
-		// for more brevity.
+            // or simply:
+            //
+            // self.adjacency_matrix()
+            //	.get(from)
+            //	.ok_or(NodeNotInGraph)
+            //
+            // for more brevity.
         }
-	}
+    }
+}
 
-	fn mark_traversed(&mut self, from: &str, to: &str, id: u32) {
-	}
+impl Iterator for MultiGraph {
+    type Item = Edge;
+    fn next(&mut self) -> Option<Self::Item> {
+        // if self.start >= self.end {
+        //     return None;
+        // }
+        // let result = Some(self.start);
+		let hm = self.adjacency_matrix();
+        let result = hm.get_key_value("B");
+		println!("result is {:?}", result);
+        // self.start += 1;
+        // result
+        None
+    }
 }
 
 #[cfg(test)]
-// mod test_undirected_graph {
 mod tests {
     use super::*;
 
-//     #[test]
-//     fn test_neighbors() {
-//         let mut graph = UndirectedGraph::new();
-// 
-//         graph.add_edge(("A", "B"));
-//         graph.add_edge(("A", "B"));
-// 
-//         graph.add_edge(("B", "C"));
-//         graph.add_edge(("B", "C"));
-// 
-//         graph.add_edge(("A", "D"));
-//         graph.add_edge(("B", "D"));
-//         graph.add_edge(("C", "D"));
-// 
-//         assert_eq!(
-//             graph.neighbors("A").unwrap(),
-//             &vec![
-//                 (String::from("B")),
-//                 (String::from("B")),
-//                 (String::from("D")),
-//             ]
-//         );
-// 
-//         assert_eq!(
-//             graph.neighbors("B").unwrap(),
-//             &vec![
-//                 (String::from("A")),
-//                 (String::from("A")),
-//                 (String::from("C")),
-//                 (String::from("C")),
-//                 (String::from("D")),
-//             ]
-//         );
-// 
-//         assert_eq!(
-//             graph.neighbors("C").unwrap(),
-//             &vec![
-// 				(String::from("B")),
-// 				(String::from("B")),
-// 				(String::from("D")),
-// 			]
-//         );
-// 
-//         assert_eq!(
-//             graph.neighbors("D").unwrap(),
-//             &vec![
-// 				(String::from("A")),
-// 				(String::from("B")),
-// 				(String::from("C")),
-// 			]
-//         );
-//     }
+    #[test]
+    fn test_neighbors() {
+        let mut graph = MultiGraph::new();
 
-    //     #[test]
-    //     fn test_directed() {
-    //         let mut graph = DirectedGraph::new();
-    //
-    //         graph.add_edge(("a", "b", 5));
-    //         graph.add_edge(("b", "c", 10));
-    //         graph.add_edge(("c", "a", 7));
-    //         graph.add_edge(("b", "a", 5));
-    //
-    //         assert_eq!(graph.neighbors("a").unwrap(), &vec![(String::from("b"), 5)]);
-    //         assert_eq!(
-    //             graph.neighbors("b").unwrap(),
-    //             &vec![(String::from("c"), 10), (String::from("a"), 5)]
-    //         );
-    //     }
+        graph.populate();
 
-    	#[test]
-    	fn test_konigsberg() {
-            let mut graph = MultiGraph::new();
-    
-    		//
-    		// Add the seven bridges (A,B), (B,C) etc.
-			// The first bridge from A->B is (A,B,1) and the second is (A,B,2).
-    		//
-            graph.add_edge("A", "B", 1);
-            graph.add_edge("A", "B", 2);
+		// A->B 1, A->B 2, A->D
+        assert_eq!(
+            graph.neighbors("A").unwrap(),
+            &vec![
+                (Edge {
+                    from: String::from("A"),
+                    to: String::from("B"),
+                    id: 1,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("A"),
+                    to: String::from("B"),
+                    id: 2,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("A"),
+                    to: String::from("D"),
+                    id: 1,
+                    traversed: false
+                }),
+            ]
+        );
 
-            graph.add_edge("B", "C", 1);
-            graph.add_edge("B", "C", 2);
+		// B->A 1, B->A 2, B->C 1, B->C 2, B->D
+        assert_eq!(
+            graph.neighbors("B").unwrap(),
+            &vec![
+                (Edge {
+                    from: String::from("B"),
+                    to: String::from("A"),
+                    id: 1,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("B"),
+                    to: String::from("A"),
+                    id: 2,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("B"),
+                    to: String::from("C"),
+                    id: 1,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("B"),
+                    to: String::from("C"),
+                    id: 2,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("B"),
+                    to: String::from("D"),
+                    id: 1,
+                    traversed: false
+                }),
+            ]
+        );
 
-            graph.add_edge("A", "D", 1);
-            graph.add_edge("B", "D", 1);
-            graph.add_edge("C", "D", 1);
+		// C->B 1, C->B 2, C->D 1
+        assert_eq!(
+            graph.neighbors("C").unwrap(),
+            &vec![
+                (Edge {
+                    from: String::from("C"),
+                    to: String::from("B"),
+                    id: 1,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("C"),
+                    to: String::from("B"),
+                    id: 2,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("C"),
+                    to: String::from("D"),
+                    id: 1,
+                    traversed: false
+                }),
+            ]
+        );
 
-            // assert_eq!(
-            //     graph.neighbors("A").unwrap(),
-            //     &vec![(String::from("B")), (String::from("C"))]
-            // );
-    	}
+		// D->A, D->B, D->C
+        assert_eq!(
+            graph.neighbors("D").unwrap(),
+            &vec![
+                (Edge {
+                    from: String::from("D"),
+                    to: String::from("A"),
+                    id: 1,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("D"),
+                    to: String::from("B"),
+                    id: 1,
+                    traversed: false
+                }),
+                (Edge {
+                    from: String::from("D"),
+                    to: String::from("C"),
+                    id: 1,
+                    traversed: false
+                }),
+            ]
+        );
+
+		//
+		// Test a nonexistent node E to see if .neighbors() fails correctly.
+		//
+        assert_eq!(graph.neighbors("E"), Err(NodeNotInGraph));
+    }
+
+    #[test]
+    fn test_display() {
+        let mut graph = MultiGraph::new();
+
+        graph.populate();
+		graph.display();
+	}
+
+    #[test]
+    fn test_traverse() {
+        let mut graph = MultiGraph::new();
+
+        graph.populate();
+		// graph.traverse();
+		// graph.traverse(from, to, id);
+		()
+    }
+
+    #[test]
+    fn test_konigsberg() {
+        let mut graph = MultiGraph::new();
+
+        graph.populate();
+    }
 }
