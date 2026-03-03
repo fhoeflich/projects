@@ -1,11 +1,11 @@
 #![allow(unused)]
 
-use std::cmp::Ordering;
 use std::any::type_name_of_val;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
-pub struct NodeNotInGraph; 	//custom error type if node is not found in graph
+pub struct NodeNotInGraph; //custom error type if node is not found in graph
 
 pub struct DirectedGraph {
     adjacency_matrix: HashMap<String, Vec<String>>,
@@ -41,7 +41,7 @@ impl PartialOrd for Edge {
 
 #[derive(Debug)]
 pub struct MultiGraph {
-	total_edges: u8,
+    total_edges: u8,
     adjacency_matrix: HashMap<String, Vec<Edge>>,
 }
 
@@ -125,7 +125,7 @@ impl Graph for UndirectedGraph {
 impl MultiGraph {
     pub fn new() -> MultiGraph {
         MultiGraph {
-			total_edges: 7,
+            total_edges: 7,
             adjacency_matrix: HashMap::new(),
         }
     }
@@ -148,62 +148,61 @@ impl MultiGraph {
         });
     }
 
-	fn populate(&mut self) {
+    fn populate(&mut self) {
         //
-		// Populate the Konigsberg graph:
+        // Populate the Konigsberg graph:
         // 1. Add the seven bridge edges (A,B), (B,C) etc.
         //    The first bridge from A->B is (A,B,1) and the second is (A,B,2).
         //    All edges are undirected/bidirectional.
         //
-        self.add_edge("A", "B", 1, false);		// all from A
+        self.add_edge("A", "B", 1, false); // all from A
         self.add_edge("A", "B", 2, false);
         self.add_edge("A", "D", 1, false);
 
-        self.add_edge("B", "A", 1, false);		// all from B
+        self.add_edge("B", "A", 1, false); // all from B
         self.add_edge("B", "A", 2, false);
         self.add_edge("B", "C", 1, false);
         self.add_edge("B", "C", 2, false);
         self.add_edge("B", "D", 1, false);
 
-        self.add_edge("C", "B", 1, false);		// all from C
+        self.add_edge("C", "B", 1, false); // all from C
         self.add_edge("C", "B", 2, false);
         self.add_edge("C", "D", 1, false);
 
-        self.add_edge("D", "A", 1, false);		// all from D
+        self.add_edge("D", "A", 1, false); // all from D
         self.add_edge("D", "B", 1, false);
         self.add_edge("D", "C", 1, false);
-	}
+    }
 
-	fn display(&mut self) {
-		for (node, edgevec) in self.adjacency_matrix() {
-			// println!("node is {node}, edgevec is {edgevec:?}\n");
-			for edge in edgevec.iter() {
-				// println!("edge is {edge:?}");
-				print!("{} -> {}({})  ", edge.from, edge.to, edge.id);
-			}
-			println!("");
-		}
-	}
+    fn display(&mut self) {
+        for (node, edgevec) in self.adjacency_matrix() {
+            // println!("node is {node}, edgevec is {edgevec:?}\n");
+            for edge in edgevec.iter() {
+                // println!("edge is {edge:?}");
+                print!("{} -> {}({})  ", edge.from, edge.to, edge.id);
+            }
+            println!("");
+        }
+    }
 
     pub fn traverse(&mut self, from: &str, to: &str, id: u32) {
-		for (node, edgevec) in self.adjacency_matrix() {
-			// println!("node is {node}, edgevec is {edgevec:?}\n");
-			for starter_edge in edgevec.iter() {
-				// println!("starter_edge is {starter_edge:?}\n");
-				let from_char: Option<char> = starter_edge.from.chars().next();
-				match from_char {
-					Some('A'..='D') => {
-						println!("match starter_edge case {:?}", from_char);
-					}
-					_ => {
-						panic!("Node not found: {:?}", from_char);
-					}
-				}
-			}
-		}
-	}
+        for (node, edgevec) in self.adjacency_matrix() {
+            for starter_edge in edgevec.iter() {
+                let from_char: Option<char> = starter_edge.from.chars().next();
+                match from_char {
+                    Some('A'..='D') => {
+                        println!("match starter_edge case {:?}", from_char);
+                    }
+                    _ => {
+                        panic!("Node not found: {:?}", from_char);
+                    }
+                }
+            }
+        }
+    }
 
-    pub fn neighbors(&mut self, from: &str) -> Result<&Vec<Edge>, NodeNotInGraph> {
+    pub fn neighbors(&mut self, from: &str) ->
+				Result<&Vec<Edge>, NodeNotInGraph> {
         match self.adjacency_matrix().get(from) {
             None => Err(NodeNotInGraph),
             Some(edges) => Ok(edges),
@@ -225,9 +224,9 @@ impl Iterator for MultiGraph {
         //     return None;
         // }
         // let result = Some(self.start);
-		let hm = self.adjacency_matrix();
+        let hm = self.adjacency_matrix();
         let result = hm.get_key_value("B");
-		println!("result is {:?}", result);
+        println!("result is {:?}", result);
         // self.start += 1;
         // result
         None
@@ -244,7 +243,7 @@ mod tests {
 
         graph.populate();
 
-		// A->B 1, A->B 2, A->D
+        // A->B 1, A->B 2, A->D
         assert_eq!(
             graph.neighbors("A").unwrap(),
             &vec![
@@ -269,7 +268,7 @@ mod tests {
             ]
         );
 
-		// B->A 1, B->A 2, B->C 1, B->C 2, B->D
+        // B->A 1, B->A 2, B->C 1, B->C 2, B->D
         assert_eq!(
             graph.neighbors("B").unwrap(),
             &vec![
@@ -306,7 +305,7 @@ mod tests {
             ]
         );
 
-		// C->B 1, C->B 2, C->D 1
+        // C->B 1, C->B 2, C->D 1
         assert_eq!(
             graph.neighbors("C").unwrap(),
             &vec![
@@ -331,7 +330,7 @@ mod tests {
             ]
         );
 
-		// D->A, D->B, D->C
+        // D->A, D->B, D->C
         assert_eq!(
             graph.neighbors("D").unwrap(),
             &vec![
@@ -356,9 +355,9 @@ mod tests {
             ]
         );
 
-		//
-		// Test a nonexistent node E to see if .neighbors() fails correctly.
-		//
+        //
+        // Test a nonexistent node E to see if .neighbors() fails correctly.
+        //
         assert_eq!(graph.neighbors("E"), Err(NodeNotInGraph));
     }
 
@@ -367,17 +366,17 @@ mod tests {
         let mut graph = MultiGraph::new();
 
         graph.populate();
-		graph.display();
-	}
+        graph.display();
+    }
 
     #[test]
     fn test_traverse() {
         let mut graph = MultiGraph::new();
 
         graph.populate();
-		// graph.traverse();
-		// graph.traverse(from, to, id);
-		()
+        // graph.traverse();
+        // graph.traverse(from, to, id);
+        ()
     }
 
     #[test]
