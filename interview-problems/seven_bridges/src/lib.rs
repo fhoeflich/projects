@@ -185,18 +185,33 @@ impl MultiGraph {
         }
     }
 
-    pub fn traverse(&mut self, from: &str, to: &str, id: u32) {
-        for (node, edgevec) in self.adjacency_matrix() {
+    pub fn traverse_all(&mut self, from: &str) {
+		//
+		// Traverse all paths starting from node `from'.
+		// XXX: I suppose the return value should be the number of
+		//		traversals completed, i.e. you get back to `from'.
+		//
+        for (node, edgevec) in self.adjacency_matrix().clone() {
             for starter_edge in edgevec.iter() {
-                let from_char: Option<char> = starter_edge.from.chars().next();
-                match from_char {
-                    Some('A'..='D') => {
-                        println!("match starter_edge case {:?}", from_char);
+                let from: String = starter_edge.from.clone();
+                match from {
+                    ref val if *val == "A".to_string() => {
+            			println!("=======> {:?}", self.neighbors(&from).unwrap());
                     }
+                    ref val if *val == "B".to_string() => {
+            			println!("=======> {:?}", self.neighbors(&from).unwrap());
+					}
+                    ref val if *val == "C".to_string() => {
+            			println!("=======> {:?}", self.neighbors(&from).unwrap());
+					}
+                    ref val if *val == "D".to_string() => {
+            			println!("=======> {:?}", self.neighbors(&from).unwrap());
+					}
                     _ => {
-                        panic!("Node not found: {:?}", from_char);
-                    }
-                }
+						panic!("Node not found: {:?}", from);
+					}
+               	}
+				println!("");
             }
         }
     }
@@ -370,13 +385,11 @@ mod tests {
     }
 
     #[test]
-    fn test_traverse() {
+    fn test_traverse_all() {
         let mut graph = MultiGraph::new();
 
         graph.populate();
-        // graph.traverse();
-        // graph.traverse(from, to, id);
-        ()
+        graph.traverse_all("A");
     }
 
     #[test]
