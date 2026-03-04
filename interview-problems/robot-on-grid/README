@@ -1,0 +1,16 @@
+
+A robot covers nine squares of the grid as shown in robot-on-grid.jpg.  It may be outfitted with up to nine sensors, one for each of its squares (shown in red), on the grid (but sensors are prohibitively expensive).  The robot's primitives are:
+
+void move_forward()
+void turn_left()
+void turn_right()
+bool sensor() - true if forward sensor is on the path, else false.
+
+1. First determine how many sensors you need to deploy in order to traverse the green path of squares in the grid. [Answer: one forward sensor only.]
+2. Design a general algorithm to perform the traversal.
+3. Clearly, the termination criterion is:  there are no squares left to move to.
+
+Assumptions:
+------------
+1. There will never be any cycles in the green path, i.e. next square != any previous square on the path for all next squares.
+2. There will be no T-junctions in the green path.
