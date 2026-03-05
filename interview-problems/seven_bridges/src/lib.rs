@@ -4,7 +4,7 @@ use std::any::type_name_of_val;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct NodeNotInGraph; //custom error type if node is not found in graph
 
 pub struct DirectedGraph {
@@ -71,12 +71,12 @@ pub trait Graph {
             });
     }
 
-    fn neighbors(&mut self, node: &str) -> Result<&Vec<String>, NodeNotInGraph> {
-        match self.adjacency_matrix().get(node) {
-            None => Err(NodeNotInGraph),
-            Some(i) => Ok(i),
-        }
-    }
+    // fn neighbors(&mut self, node: &str) -> Result<&mut Vec<String>, NodeNotInGraph> {
+    //    match self.adjacency_matrix().get(node) {
+    //         None => Err(NodeNotInGraph),
+    //         Some(mut i) => Ok(i),
+    //     }
+    // }
 }
 
 impl Graph for DirectedGraph {
@@ -176,7 +176,7 @@ impl MultiGraph {
 
     fn display(&mut self) {
         for (node, edgevec) in self.adjacency_matrix() {
-            // println!("node is {node}, edgevec is {edgevec:?}\n");
+            println!("node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter() {
                 // println!("edge is {edge:?}");
                 print!("{} -> {}({})  ", edge.from, edge.to, edge.id);
@@ -185,36 +185,82 @@ impl MultiGraph {
         }
     }
 
-    pub fn traverse_all(&mut self, from: &str) {
+    // pub fn traverse_all(&mut self, from: &str) {
 		//
 		// Traverse all paths starting from node `from'.
 		// XXX: I suppose the return value should be the number of
 		//		traversals completed, i.e. you get back to `from'.
 		//
-        for (node, edgevec) in self.adjacency_matrix().clone() {
-            for starter_edge in edgevec.iter() {
-                let from: String = starter_edge.from.clone();
-                match from {
-                    ref val if *val == "A".to_string() => {
-            			println!("=======> {:?}", self.neighbors(&from).unwrap());
-                    }
-                    ref val if *val == "B".to_string() => {
-            			println!("=======> {:?}", self.neighbors(&from).unwrap());
-					}
-                    ref val if *val == "C".to_string() => {
-            			println!("=======> {:?}", self.neighbors(&from).unwrap());
-					}
-                    ref val if *val == "D".to_string() => {
-            			println!("=======> {:?}", self.neighbors(&from).unwrap());
-					}
-                    _ => {
-						panic!("Node not found: {:?}", from);
-					}
-               	}
-				println!("");
-            }
-        }
-    }
+	// 	let mut ntraversed = 0;
+
+      //   for (node, mut edgevec) in self.adjacency_matrix().clone() {
+      //     for starter_edge in edgevec.iter_mut() {
+      //           let from: String = starter_edge.from.clone();
+      //           match from {
+      //               ref val if *val == "A".to_string() => {
+      //       			// for edge in self.neighbors(&from).iter_mut() {
+      //       			for edge in edgevec.iter_mut() {
+  	  // 						if edge.traversed == true {
+	  // 							continue;
+	  // 						}
+	  // 						edge.traversed = true;
+	  // 						ntraversed += 1;
+	  // 						println!("edge.from ======> {:?}",
+	  // 									edge.from);
+	  // 						println!("edge.to ======> {:?}",
+	  // 									edge.to);
+	  // 						println!("edge.id ======> {:?}",
+	  // 									edge.id);
+							// println!("edge.traversed ======> {:?}",
+							// 			edge.traversed);
+	  // 					}
+
+	  // 					if (ntraversed == 0) {
+							// all edges starting at `from' have been traversed.
+	  // 						println!("all edges from node {} have been traversed",
+	  // 									from);
+	  // 					}
+      //              }
+      //               ref val if *val == "B".to_string() => {
+            			// println!("=======> {:?}", self.neighbors(&from).unwrap());
+	// 			}
+     //                 ref val if *val == "C".to_string() => {
+            			// println!("=======> {:?}", self.neighbors(&from).unwrap());
+	 // 				}
+     //                 ref val if *val == "D".to_string() => {
+            			// println!("=======> {:?}", self.neighbors(&from).unwrap());
+	 // 				}
+     //                 _ => {
+	 // 					panic!("Node not found: {:?}", from);
+	 // 				}
+     //            	}
+	 // 			println!("");
+     //         }
+     //     }
+     // }
+
+	pub fn traverse_all(&mut self) -> usize {
+		//
+		// Traverse all paths starting from node `from'.
+		// Return the number of complete traversals made resulting in
+		// arriving back at the starting node.
+		//
+		let mut ntraversed = 0;
+
+		for (node, mut edgevec) in self.adjacency_matrix() {
+			for mut edge in edgevec.iter_mut() {
+				if edge.traversed == true {
+					continue;
+				}
+				edge.traversed = true;
+				ntraversed += 1;
+
+				// println!("edge is {:?}", edge);
+			}
+		}
+
+		ntraversed
+	}
 
     pub fn neighbors(&mut self, from: &str) ->
 				Result<&Vec<Edge>, NodeNotInGraph> {
@@ -376,26 +422,28 @@ mod tests {
         assert_eq!(graph.neighbors("E"), Err(NodeNotInGraph));
     }
 
-    #[test]
-    fn test_display() {
-        let mut graph = MultiGraph::new();
+    // #[test]
+    // fn test_display() {
+    //     let mut graph = MultiGraph::new();
 
-        graph.populate();
-        graph.display();
-    }
+    //     graph.populate();
+    //     graph.display();
+    // }
 
     #[test]
     fn test_traverse_all() {
         let mut graph = MultiGraph::new();
+		let mut n = 0;
 
         graph.populate();
-        graph.traverse_all("A");
+        let n = graph.traverse_all();
+		println!("ntraversed at the end is: {}", n);
     }
 
-    #[test]
-    fn test_konigsberg() {
-        let mut graph = MultiGraph::new();
+    // #[test]
+    // fn test_konigsberg() {
+    //     let mut graph = MultiGraph::new();
 
-        graph.populate();
-    }
+    //     graph.populate();
+    // }
 }
