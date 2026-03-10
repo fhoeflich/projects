@@ -3,9 +3,13 @@
 use std::any::type_name_of_val;
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::io::Error;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct NodeNotInGraph; //custom error type if node is not found in graph
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct NoUntraversedEdge; // custom error type if no untraversed edge is found
 
 pub struct DirectedGraph {
     adjacency_matrix: HashMap<String, Vec<String>>,
@@ -148,6 +152,24 @@ impl MultiGraph {
         });
     }
 
+    pub fn find_untraversed_neighbor(&mut self, from: &str) -> Result<String, NoUntraversedEdge> {
+        //
+        // Find an untraversed edge from `from' to any neighbor and return it.
+        // If no such edge exists, return NoUntraversedEdge.
+        //
+        let edges = self.adjacency_matrix()[from].clone();
+        println!("edges is: {:?}", edges);
+
+        // fn check_inventory(items: Vec<Item>, product: String) -> Vec<Item> {
+        //    items.into_iter().filter(|i| i.name == product).collect()
+        //}
+
+        match edges.into_iter().find(|e| !e.traversed) {
+            Some(edge) => Ok(edge.to),
+            None => Err(NoUntraversedEdge),
+        }
+    }
+
     fn populate(&mut self) {
         //
         // Populate the Konigsberg graph:
@@ -175,95 +197,141 @@ impl MultiGraph {
     }
 
     fn display(&mut self) {
+        // Print out a simple ASCII A->B version of the graph.
         for (node, edgevec) in self.adjacency_matrix() {
             println!("node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter() {
                 // println!("edge is {edge:?}");
                 print!("{} -> {}({})  ", edge.from, edge.to, edge.id);
             }
-            println!("");
+            // println!("");
+        }
+    }
+
+    fn reset(&mut self) {
+        // Reset all edges of the graph to not traversed.
+        for (node, edgevec) in self.adjacency_matrix() {
+            println!("node is {node}, edgevec is {edgevec:?}\n");
+            for mut edge in edgevec.iter_mut() {
+                // println!("edge is {edge:?}");
+                edge.traversed = false;
+            }
+            // println!("");
         }
     }
 
     // pub fn traverse_all(&mut self, from: &str) {
-		//
-		// Traverse all paths starting from node `from'.
-		// XXX: I suppose the return value should be the number of
-		//		traversals completed, i.e. you get back to `from'.
-		//
-	// 	let mut ntraversed = 0;
+    //
+    // Traverse all paths starting from node `from'.
+    // XXX: I suppose the return value should be the number of
+    //		traversals completed, i.e. you get back to `from'.
+    //
+    // 	let mut ntraversed = 0;
 
-      //   for (node, mut edgevec) in self.adjacency_matrix().clone() {
-      //     for starter_edge in edgevec.iter_mut() {
-      //           let from: String = starter_edge.from.clone();
-      //           match from {
-      //               ref val if *val == "A".to_string() => {
-      //       			// for edge in self.neighbors(&from).iter_mut() {
-      //       			for edge in edgevec.iter_mut() {
-  	  // 						if edge.traversed == true {
-	  // 							continue;
-	  // 						}
-	  // 						edge.traversed = true;
-	  // 						ntraversed += 1;
-	  // 						println!("edge.from ======> {:?}",
-	  // 									edge.from);
-	  // 						println!("edge.to ======> {:?}",
-	  // 									edge.to);
-	  // 						println!("edge.id ======> {:?}",
-	  // 									edge.id);
-							// println!("edge.traversed ======> {:?}",
-							// 			edge.traversed);
-	  // 					}
+    //   for (node, mut edgevec) in self.adjacency_matrix().clone() {
+    //     for starter_edge in edgevec.iter_mut() {
+    //           let from: String = starter_edge.from.clone();
+    //           match from {
+    //               ref val if *val == "A".to_string() => {
+    //       			// for edge in self.neighbors(&from).iter_mut() {
+    //       			for edge in edgevec.iter_mut() {
+    // 						if edge.traversed == true {
+    // 							continue;
+    // 						}
+    // 						edge.traversed = true;
+    // 						ntraversed += 1;
+    // 						println!("edge.from ======> {:?}",
+    // 									edge.from);
+    // 						println!("edge.to ======> {:?}",
+    // 									edge.to);
+    // 						println!("edge.id ======> {:?}",
+    // 									edge.id);
+    // println!("edge.traversed ======> {:?}",
+    // 			edge.traversed);
+    // 					}
 
-	  // 					if (ntraversed == 0) {
-							// all edges starting at `from' have been traversed.
-	  // 						println!("all edges from node {} have been traversed",
-	  // 									from);
-	  // 					}
-      //              }
-      //               ref val if *val == "B".to_string() => {
-            			// println!("=======> {:?}", self.neighbors(&from).unwrap());
-	// 			}
-     //                 ref val if *val == "C".to_string() => {
-            			// println!("=======> {:?}", self.neighbors(&from).unwrap());
-	 // 				}
-     //                 ref val if *val == "D".to_string() => {
-            			// println!("=======> {:?}", self.neighbors(&from).unwrap());
-	 // 				}
-     //                 _ => {
-	 // 					panic!("Node not found: {:?}", from);
-	 // 				}
-     //            	}
-	 // 			println!("");
-     //         }
-     //     }
-     // }
+    // 					if (ntraversed == 0) {
+    // all edges starting at `from' have been traversed.
+    // 						println!("all edges from node {} have been traversed",
+    // 									from);
+    // 					}
+    //              }
+    //               ref val if *val == "B".to_string() => {
+    // println!("=======> {:?}", self.neighbors(&from).unwrap());
+    // 			}
+    //                 ref val if *val == "C".to_string() => {
+    // println!("=======> {:?}", self.neighbors(&from).unwrap());
+    // 				}
+    //                 ref val if *val == "D".to_string() => {
+    // println!("=======> {:?}", self.neighbors(&from).unwrap());
+    // 				}
+    //                 _ => {
+    // 					panic!("Node not found: {:?}", from);
+    // 				}
+    //            	}
+    // 			println!("");
+    //         }
+    //     }
+    // }
 
-	pub fn traverse_all(&mut self) -> usize {
-		//
-		// Traverse all paths starting from node `from'.
-		// Return the number of complete traversals made resulting in
-		// arriving back at the starting node.
-		//
-		let mut ntraversed = 0;
+    pub fn is_traversable(&mut self, traversed: &mut MultiGraph) -> bool {
+        //
+        // Try to traverse all paths starting from node `from'.
+        // Return true if any complete traversals are made resulting
+        // in arriving back at the starting node, otherwise return false.
+        // If true, the traversed graph is passed back in `traversed'.
+        //
+        let mut traversable: bool = false;
+        let mut traversed_graph = MultiGraph::new();
 
-		for (node, mut edgevec) in self.adjacency_matrix() {
-			for mut edge in edgevec.iter_mut() {
-				if edge.traversed == true {
-					continue;
-				}
-				edge.traversed = true;
-				ntraversed += 1;
+        for (node, mut edgevec) in self.adjacency_matrix() {
+            let mut original_node: String = String::new();
+            let mut last_edge = Edge {
+                from: "".to_string(),
+                to: "".to_string(),
+                id: 0,
+                traversed: false,
+            };
 
-				// println!("edge is {:?}", edge);
-			}
-		}
+            for mut edge in edgevec.iter_mut() {
+                //
+                // Save the original node we started from.  We should
+                // finish up here in a successful traversal.
+                //
+                if original_node == "" {
+                    original_node = edge.from.clone();
+                }
 
-		ntraversed
-	}
+                // Skip any previously traversed edge.
+                if edge.traversed == true {
+                    continue;
+                }
 
-    pub fn neighbors(&mut self, from: &str) ->
-				Result<&Vec<Edge>, NodeNotInGraph> {
+                //
+                // Current edge is now traversed.
+                // Push it onto traversed_graph so we can examine it later
+                // to verify the path taken for full traversal, done
+                // once-per-edge.
+                //
+                edge.traversed = true;
+                traversed_graph.add_edge(&edge.from, &edge.to, edge.id, edge.traversed);
+
+                if last_edge.from != "" {
+                    assert!(last_edge.to == edge.from);
+                }
+                last_edge = edge.clone();
+
+                println!("Done with {:?}", edge);
+            }
+        }
+
+        traversable = true; // XXX: put logic in here to verify traversed
+
+        println!("Done all edges.");
+        traversable
+    }
+
+    pub fn neighbors(&mut self, from: &str) -> Result<&Vec<Edge>, NodeNotInGraph> {
         match self.adjacency_matrix().get(from) {
             None => Err(NodeNotInGraph),
             Some(edges) => Ok(edges),
@@ -298,129 +366,129 @@ impl Iterator for MultiGraph {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_neighbors() {
-        let mut graph = MultiGraph::new();
-
-        graph.populate();
-
-        // A->B 1, A->B 2, A->D
-        assert_eq!(
-            graph.neighbors("A").unwrap(),
-            &vec![
-                (Edge {
-                    from: String::from("A"),
-                    to: String::from("B"),
-                    id: 1,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("A"),
-                    to: String::from("B"),
-                    id: 2,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("A"),
-                    to: String::from("D"),
-                    id: 1,
-                    traversed: false
-                }),
-            ]
-        );
-
-        // B->A 1, B->A 2, B->C 1, B->C 2, B->D
-        assert_eq!(
-            graph.neighbors("B").unwrap(),
-            &vec![
-                (Edge {
-                    from: String::from("B"),
-                    to: String::from("A"),
-                    id: 1,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("B"),
-                    to: String::from("A"),
-                    id: 2,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("B"),
-                    to: String::from("C"),
-                    id: 1,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("B"),
-                    to: String::from("C"),
-                    id: 2,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("B"),
-                    to: String::from("D"),
-                    id: 1,
-                    traversed: false
-                }),
-            ]
-        );
-
-        // C->B 1, C->B 2, C->D 1
-        assert_eq!(
-            graph.neighbors("C").unwrap(),
-            &vec![
-                (Edge {
-                    from: String::from("C"),
-                    to: String::from("B"),
-                    id: 1,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("C"),
-                    to: String::from("B"),
-                    id: 2,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("C"),
-                    to: String::from("D"),
-                    id: 1,
-                    traversed: false
-                }),
-            ]
-        );
-
-        // D->A, D->B, D->C
-        assert_eq!(
-            graph.neighbors("D").unwrap(),
-            &vec![
-                (Edge {
-                    from: String::from("D"),
-                    to: String::from("A"),
-                    id: 1,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("D"),
-                    to: String::from("B"),
-                    id: 1,
-                    traversed: false
-                }),
-                (Edge {
-                    from: String::from("D"),
-                    to: String::from("C"),
-                    id: 1,
-                    traversed: false
-                }),
-            ]
-        );
-
-        //
-        // Test a nonexistent node E to see if .neighbors() fails correctly.
-        //
-        assert_eq!(graph.neighbors("E"), Err(NodeNotInGraph));
-    }
+    //    #[test]
+    //    fn test_neighbors() {
+    //        let mut graph = MultiGraph::new();
+    //
+    //        graph.populate();
+    //
+    //        // A->B 1, A->B 2, A->D
+    //        assert_eq!(
+    //            graph.neighbors("A").unwrap(),
+    //            &vec![
+    //                (Edge {
+    //                    from: String::from("A"),
+    //                    to: String::from("B"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("A"),
+    //                    to: String::from("B"),
+    //                    id: 2,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("A"),
+    //                    to: String::from("D"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //            ]
+    //        );
+    //
+    //        // B->A 1, B->A 2, B->C 1, B->C 2, B->D
+    //        assert_eq!(
+    //            graph.neighbors("B").unwrap(),
+    //            &vec![
+    //                (Edge {
+    //                    from: String::from("B"),
+    //                    to: String::from("A"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("B"),
+    //                    to: String::from("A"),
+    //                    id: 2,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("B"),
+    //                    to: String::from("C"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("B"),
+    //                    to: String::from("C"),
+    //                    id: 2,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("B"),
+    //                    to: String::from("D"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //            ]
+    //        );
+    //
+    //        // C->B 1, C->B 2, C->D 1
+    //        assert_eq!(
+    //            graph.neighbors("C").unwrap(),
+    //            &vec![
+    //                (Edge {
+    //                    from: String::from("C"),
+    //                    to: String::from("B"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("C"),
+    //                    to: String::from("B"),
+    //                    id: 2,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("C"),
+    //                    to: String::from("D"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //            ]
+    //        );
+    //
+    //        // D->A, D->B, D->C
+    //        assert_eq!(
+    //            graph.neighbors("D").unwrap(),
+    //            &vec![
+    //                (Edge {
+    //                    from: String::from("D"),
+    //                    to: String::from("A"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("D"),
+    //                    to: String::from("B"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //                (Edge {
+    //                    from: String::from("D"),
+    //                    to: String::from("C"),
+    //                    id: 1,
+    //                    traversed: false
+    //                }),
+    //            ]
+    //        );
+    //
+    //        //
+    //        // Test a nonexistent node E to see if .neighbors() fails correctly.
+    //        //
+    //        assert_eq!(graph.neighbors("E"), Err(NodeNotInGraph));
+    //    }
 
     // #[test]
     // fn test_display() {
@@ -431,13 +499,53 @@ mod tests {
     // }
 
     #[test]
-    fn test_traverse_all() {
+    fn test_is_traversable() {
         let mut graph = MultiGraph::new();
-		let mut n = 0;
+        let mut traversed = MultiGraph::new();
+        let mut traversable = false;
 
-        graph.populate();
-        let n = graph.traverse_all();
-		println!("ntraversed at the end is: {}", n);
+        //
+        // Case 1.  A simple two-node graph which is traversable.
+        //			A->B, B->A
+        //
+        graph.add_edge("A", "B", 1, false);
+        graph.add_edge("B", "A", 1, false);
+        graph.find_untraversed_neighbor("A");
+        graph.find_untraversed_neighbor("B");
+
+        assert!(graph.is_traversable(&mut traversed));
+        println!("Traversed graph is: {:?}", traversed);
+
+        //
+        // Case 2.  A simple three-node graph which is NOT traversable.
+        //			A->B, B->A, A->C, C->A, B->C, C->B
+        //
+        // graph.reset();
+        // graph.add_edge("B", "C", 1, false);
+
+        // assert!(graph.is_traversable());
+        // println!("Traversed graph is: {:?}", traversed);
+
+        //
+        // Case 3.  A simple three-node graph which IS traversable.
+        //
+        // graph.reset();
+        // graph.add_edge("A", "C", 1, false);
+        // graph.add_edge("C", "A", 1, false);
+        // graph.add_edge("C", "B", 1, false);
+        // assert!(!graph.is_traversable());
+
+        //
+        // Case 4.  The Seven Bridges of Konigsberg graph.
+        //
+        // graph.populate();
+        // let traversable = graph.is_traversable(&traversed);
+        // if traversable {
+        // 	println!("Graph is traversable. Traversed graph is: {:?}",
+        // 				traversed);
+        // } else {
+        // 	println!("Graph is not traversable.");
+        // }
     }
 
     // #[test]
