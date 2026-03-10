@@ -1,0 +1,96 @@
+/*
+ * Brief context: This is an executor which resides on the host and is in
+ * charge of fulfilling IOs that comes from a Guest VM. The consumer of this
+ * thread pool will provide callbacks that complete each IO, this executor
+ * is only responsible for driving each IO to completion and providing
+ * feedback to the caller.
+ *
+ * Your exercise is to review this PR, call out any issues - finding bugs in
+ * the code and/or identifying architectural problems - and implement a better
+ * solution more appropriate for a resource constrained environment.
+ *
+ * Feel free to ask any clarifying questions!
+ */
+
+#include <queue>
+#include <mutex>
+#include <thread>
+
+typedef enum WorkType {
+    Read,
+    Write,
+} WorkType;
+
+typedef struct Work {
+    WorkType typ;
+    FILE *file;
+    int start;
+    int stop;
+    char* io_buffer;
+} Work;
+
+typedef void (*IoFunc)(Work*);
+
+class ThreadPool {
+private:
+    std::vector<std::thread> m_Threads;
+    std::mutex m_Mutex;
+
+    static int null_check(Work *work);
+    IoFunc m_Read;
+    IoFunc m_Write;
+
+public:
+    void done();
+    int read(FILE *file, int start, int stop, char* io_buffer);
+    int write(FILE *file, int start, int stop, char* io_buffer);
+
+    ThreadPool(IoFunc reader, IoFunc writer) {
+        m_Read = reader;
+        m_Write = writer;
+    }
+};
+
+void ThreadPool::done() {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    for (auto& t : m_Threads) {
+        t.join();
+    }
+}
+
+int ThreadPool::read_chunk() {
+    int ret;
+    
+    ret = m_Read(CHUNKSIZE);
+}
+int ThreadPool::read(FILE *file, int start, int stop, char* io_buffer) {
+    Work work = { WorkType::Read, file, start, stop, io_buffer };
+    if (int ret = null_check(&work)) return ret;
+    
+        for i = 0; i < CHUNKSIZE; i++) {
+            std::lock_guard<std::mutex> unlock(m_Mutex);
+            read_chunk();
+            std::lock_guard<std::mutex> lock(m_Mutex);
+        }
+    std::thread t (m_Read, work);
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_Threads.push_back(t);
+    return 0;
+}
+
+int ThreadPool::write(FILE *file, int start, int stop, char* io_buffer) {
+    Work work = { WorkType::Write, file, start, stop, io_buffer };
+    if (int ret = null_check(&work)) return ret;
+    std::thread t (m_Write, work);
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_Threads.push_back(t);
+    return 0;
+}
+
+int ThreadPool::null_check(Work *work) {
+    if (work == NULL) return -1;
+    if (work->file == NULL) return -1;
+    if (work->io_buffer == NULL) return -1;
+    if (work->start > work->stop) return -1;
+    return 0;
+}
