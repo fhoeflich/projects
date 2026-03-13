@@ -1,7 +1,5 @@
 #![allow(unused)]
 
-use std::any::type_name_of_val;
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::io::Error;
 
@@ -11,14 +9,6 @@ pub struct NodeNotInGraph; //custom error type if node is not found in graph
 #[derive(Clone, Debug, PartialEq)]
 pub struct NoUntraversedEdge; // custom error type if no untraversed edge is found
 
-pub struct DirectedGraph {
-    adjacency_matrix: HashMap<String, Vec<String>>,
-}
-
-pub struct UndirectedGraph {
-    adjacency_matrix: HashMap<String, Vec<String>>,
-}
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Edge {
     from: String,
@@ -27,104 +17,10 @@ pub struct Edge {
     traversed: bool,
 }
 
-impl Ord for Edge {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other
-            .to
-            .to_string()
-            .cmp(&self.to.to_string())
-            .then_with(|| self.to.to_string().cmp(&other.to.to_string()))
-    }
-}
-
-impl PartialOrd for Edge {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 #[derive(Debug)]
 pub struct MultiGraph {
     total_edges: u8,
     adjacency_matrix: HashMap<String, Vec<Edge>>,
-}
-
-pub trait Graph {
-    fn new() -> Self;
-    fn adjacency_matrix(&mut self) -> &mut HashMap<String, Vec<String>>;
-
-    fn add_node(&mut self, node: &str) -> bool {
-        match self.adjacency_matrix().get(node) {
-            None => {
-                // node does not already exist, add it
-                self.adjacency_matrix()
-                    .insert((*node).to_string(), Vec::new());
-                true
-            }
-            _ => false, // node already exists, do nothing
-        }
-    }
-
-    fn add_edge(&mut self, edge: (&str, &str)) {
-        self.add_node(edge.0);
-        self.add_node(edge.1);
-
-        self.adjacency_matrix()
-            .entry(edge.0.to_string())
-            .and_modify(|e| {
-                e.push(edge.1.to_string());
-            });
-    }
-
-    // fn neighbors(&mut self, node: &str) -> Result<&mut Vec<String>, NodeNotInGraph> {
-    //    match self.adjacency_matrix().get(node) {
-    //         None => Err(NodeNotInGraph),
-    //         Some(mut i) => Ok(i),
-    //     }
-    // }
-}
-
-impl Graph for DirectedGraph {
-    fn new() -> DirectedGraph {
-        DirectedGraph {
-            adjacency_matrix: HashMap::new(),
-        }
-    }
-
-    fn adjacency_matrix(&mut self) -> &mut HashMap<String, Vec<String>> {
-        &mut self.adjacency_matrix
-    }
-}
-
-impl Graph for UndirectedGraph {
-    fn new() -> UndirectedGraph {
-        UndirectedGraph {
-            adjacency_matrix: HashMap::new(),
-        }
-    }
-
-    fn adjacency_matrix(&mut self) -> &mut HashMap<String, Vec<String>> {
-        &mut self.adjacency_matrix
-    }
-
-    fn add_edge(&mut self, edge: (&str, &str)) {
-        self.add_node(edge.0);
-        self.add_node(edge.1);
-
-        self.adjacency_matrix()
-            .entry(edge.0.to_string())
-            .and_modify(|e| {
-                e.push(edge.1.to_string());
-            });
-
-        // Assignment lecture 156:  Add in connecting edge.1 to edge.0 so that
-        // the graph is now undirected
-        self.adjacency_matrix()
-            .entry(edge.1.to_string())
-            .and_modify(|e| {
-                e.push(edge.0.to_string());
-            });
-    }
 }
 
 impl MultiGraph {
@@ -309,24 +205,30 @@ impl MultiGraph {
         // in arriving back at the starting node, otherwise return false.
         // If true, the traversed graph is passed back in `traversed'.
         //
-        let mut traversable: bool = false;
+        let mut traversable: bool;
         let mut traversed_graph = MultiGraph::new();
-        let mut found_edge: Edge = Edge {
+        let mut final_edge = Edge {
             from: "".to_string(),
             to: "".to_string(),
             id: 0,
             traversed: false,
         };
+        let mut mru_edge = Edge {
+            from: "".to_string(),
+            to: "".to_string(),
+            id: 0,
+            traversed: false,
+        };
+        let mut original_node: String = String::new();
+
+        // let mut found_edge = Edge {
+        //     from: "".to_string(),
+        //     to: "".to_string(),
+        //     id: 0,
+        //     traversed: false,
+        // };
 
         for (node, mut edgevec) in self.adjacency_matrix() {
-            let mut original_node: String = String::new();
-            let mut last_edge = Edge {
-                from: "".to_string(),
-                to: "".to_string(),
-                id: 0,
-                traversed: false,
-            };
-
             for mut edge in edgevec.iter_mut() {
                 //
                 // Save the original node we started from.  We should
@@ -348,24 +250,41 @@ impl MultiGraph {
                 // once-per-edge.
                 //
                 edge.traversed = true;
-                found_edge = edge.clone();
+                // found_edge = edge.clone();
+
+				// XXX: add a trait so add_edge() can accept one Edge arg
+				//		instead of four individual Edge field args.
                 traversed_graph.add_edge(&edge.from, &edge.to, edge.id, edge.traversed);
 
-                if last_edge.from != "" {
-                    println!("Last edge is {:?}, current edge is {:?}", last_edge, edge);
-                    if edge.from != last_edge.to {
+                if mru_edge.from != "" {
+                    println!("MRU edge is {:?}, current edge is {:?}, != is {}",
+							mru_edge, edge, edge.from != mru_edge.to);
+                    if edge.from != mru_edge.to {
                         continue;
                     }
                 }
-                last_edge = edge.clone();
+                mru_edge = edge.clone();
 
                 println!("Done with {:?}", edge);
             }
         }
 
-        traversable = true; // XXX: put logic in here to verify traversed
-
         println!("Done all edges.");
+
+		//
+		// If edge.to == original_edge.from and all edges have been traversed,
+		// set traversable to true.  Otherwise, we failed and it should be
+		// set to false.
+		//
+		println!("original_node is {}, mru_edge.to is {:?}",
+				original_node, mru_edge.to);
+
+		if mru_edge.to == original_node {
+        	traversable = true;
+		} else {
+        	traversable = false;
+		}
+
         traversable
     }
 
@@ -548,8 +467,8 @@ mod tests {
         //
         graph.add_edge("A", "B", 1, false);
         graph.add_edge("B", "A", 1, false);
-        graph.find_untraversed_neighbor("A");
-        graph.find_untraversed_neighbor("B");
+        // graph.find_untraversed_neighbor("A");
+        // graph.find_untraversed_neighbor("B");
 
         assert!(graph.is_traversable(&mut graph_traversed));
         println!("Traversed graph is: {:?}", graph_traversed);
