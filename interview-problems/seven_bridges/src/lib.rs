@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::io::Error;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -132,19 +132,7 @@ impl MultiGraph {
         }
     }
 
-    fn drain_all(&mut self) {
-        //
-        // Pop (drain) all edges off the graph's edgevec.
-        //
-        for (node, edgevec) in self.adjacency_matrix() {
-            println!("node is {node}, edgevec is {edgevec:?}\n");
-            for _ in edgevec.drain(..) {
-                // println!(_);
-            }
-        }
-    }
-
-    // pub fn traverse_all(&mut self, from: &str) {
+    // pub fn traverse_all(&mut self, from: &str)
     //
     // Traverse all paths starting from node `from'.
     // XXX: I suppose the return value should be the number of
@@ -198,7 +186,7 @@ impl MultiGraph {
     //     }
     // }
 
-    pub fn is_traversable(&mut self, graph_traversed: &mut MultiGraph) -> bool {
+    pub fn is_traversable(&mut self, queue: &mut VecDeque<Edge>) -> bool {
         //
         // Try to traverse all paths starting from node `from'.
         // Return true if any complete traversals are made resulting
@@ -206,7 +194,6 @@ impl MultiGraph {
         // If true, the traversed graph is passed back in `traversed'.
         //
         let mut traversable: bool;
-        let mut traversed_graph = MultiGraph::new();
         let mut final_edge = Edge {
             from: "".to_string(),
             to: "".to_string(),
@@ -245,20 +232,25 @@ impl MultiGraph {
 
                 //
                 // Current edge is now traversed.
-                // Push it onto traversed_graph so we can examine it later
-                // to verify the path taken for full traversal, done
+                // Push it onto traversed edge queue so we can examine it
+                // later to verify the path taken for full traversal, done
                 // once-per-edge.
                 //
                 edge.traversed = true;
                 // found_edge = edge.clone();
 
-				// XXX: add a trait so add_edge() can accept one Edge arg
-				//		instead of four individual Edge field args.
-                traversed_graph.add_edge(&edge.from, &edge.to, edge.id, edge.traversed);
+                // XXX: add a trait so add_edge() can accept one Edge arg
+                //		instead of four individual Edge field args.
+                // queue.push_back(&edge.from, &edge.to, edge.id, edge.traversed);
+                queue.push_back(edge.clone());
 
                 if mru_edge.from != "" {
-                    println!("MRU edge is {:?}, current edge is {:?}, != is {}",
-							mru_edge, edge, edge.from != mru_edge.to);
+                    println!(
+                        "MRU edge is {:?}, current edge is {:?}, != is {}",
+                        mru_edge,
+                        edge,
+                        edge.from != mru_edge.to
+                    );
                     if edge.from != mru_edge.to {
                         continue;
                     }
@@ -271,19 +263,21 @@ impl MultiGraph {
 
         println!("Done all edges.");
 
-		//
-		// If edge.to == original_edge.from and all edges have been traversed,
-		// set traversable to true.  Otherwise, we failed and it should be
-		// set to false.
-		//
-		println!("original_node is {}, mru_edge.to is {:?}",
-				original_node, mru_edge.to);
+        //
+        // If edge.to == original_edge.from and all edges have been traversed,
+        // set traversable to true.  Otherwise, we failed and it should be
+        // set to false.
+        //
+        println!(
+            "original_node is {}, mru_edge.to is {:?}",
+            original_node, mru_edge.to
+        );
 
-		if mru_edge.to == original_node {
-        	traversable = true;
-		} else {
-        	traversable = false;
-		}
+        if mru_edge.to == original_node {
+            traversable = true;
+        } else {
+            traversable = false;
+        }
 
         traversable
     }
@@ -458,7 +452,7 @@ mod tests {
     #[test]
     fn test_is_traversable() {
         let mut graph = MultiGraph::new();
-        let mut graph_traversed = MultiGraph::new();
+        let mut queue = VecDeque::new();
         let mut traversable = false;
 
         //
@@ -470,8 +464,8 @@ mod tests {
         // graph.find_untraversed_neighbor("A");
         // graph.find_untraversed_neighbor("B");
 
-        assert!(graph.is_traversable(&mut graph_traversed));
-        println!("Traversed graph is: {:?}", graph_traversed);
+        assert!(graph.is_traversable(&mut queue));
+        println!("Traversed queue is: {:?}", queue);
 
         //
         // Case 2.  A simple three-node graph which is NOT traversable.
@@ -479,13 +473,13 @@ mod tests {
         //
         graph.reset();
         graph.add_edge("B", "C", 1, false);
-        graph_traversed.drain_all();
+        queue.clear();
         graph.find_untraversed_neighbor("A");
         graph.find_untraversed_neighbor("B");
         graph.find_untraversed_neighbor("C");
 
-        assert!(graph.is_traversable(&mut graph_traversed));
-        // println!("Traversed graph is: {:?}", graph_traversed);
+        assert!(graph.is_traversable(&mut queue));
+        println!("Traversed queue is: {:?}", queue);
 
         //
         // Case 3.  A simple three-node graph which IS traversable.
@@ -495,13 +489,13 @@ mod tests {
         // graph.add_edge("A", "C", 1, false);
         // graph.add_edge("C", "A", 1, false);
         // graph.add_edge("C", "B", 1, false);
-        // assert!(!graph.is_traversable());
+        // assert!(!graph.is_traversable(&mut queue));
 
         //
         // Case 4.  The Seven Bridges of Konigsberg graph.
         //
         // graph.populate();
-        // let traversable = graph.is_traversable(&traversed);
+        // let traversable = graph.is_traversable(&mut queue);
         // if traversable {
         // 	println!("Graph is traversable. Traversed graph is: {:?}",
         // 				traversed);
