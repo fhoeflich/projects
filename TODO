@@ -11,6 +11,9 @@ Sample applications needed for portfolio:
 4. DPDK EAL
 5. OpenBMC
 6. DO-178C
+7. Expand/extend current Jetson Nano ML project to include several different
+	bottles, plus a spreadsheet of no. of photographs taken to train and %
+	accuracy identifying them.
 
 Interview problems:
 1. Rust implementation of DSA algorithms for BSTs
