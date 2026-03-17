@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::io::Error;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -50,33 +50,29 @@ impl MultiGraph {
     }
 
     pub fn find_untraversed_neighbor(&mut self, from: &str) -> Result<String, NoUntraversedEdge> {
-        let mut edges = Vec::new();
-
         //
         // Find an untraversed edge from `from' to any neighbor and return
         // that node name.
         // If no such edge exists, return NoUntraversedEdge.
         //
         println!("find_untraversed_neighbor({}): entered", from);
-        match self.adjacency_matrix().get(from).clone() {
+        //match self.adjacency_matrix().get(from).clone() {
+        match self.adjacency_matrix().get(from) {
             Some(edges) => {
                 // Note: using .get() avoids a "no entry found for key"
                 //			panic if no such edge exists.
-                println!("Found candidate edge list {:?}", edges);
+                println!("find_untraversed_neighbor: found candidate edge list {edges:?}");
+        		match edges.into_iter().find(|e: &&Edge| !e.traversed) {
+					Some(edge) => {
+					println!("find_untraversed_neighbor: found edge {edge:?}");
+					Ok(edge.to.clone())
+					},
+					None => Err(NoUntraversedEdge),
+        		}
             }
             None => {
                 return Err(NoUntraversedEdge);
             }
-        }
-        // println!("edges is: {:?}", edges);
-
-        // fn check_inventory(items: Vec<Item>, product: String) -> Vec<Item> {
-        //    items.into_iter().filter(|i| i.name == product).collect()
-        //}
-
-        match edges.into_iter().find(|e: &Edge| !e.traversed) {
-            Some(edge) => Ok(edge.to),
-            None => Err(NoUntraversedEdge),
         }
     }
 
@@ -123,12 +119,22 @@ impl MultiGraph {
         // Reset all edges of the graph to not traversed.
         //
         for (node, edgevec) in self.adjacency_matrix() {
-            // println!("node is {node}, edgevec is {edgevec:?}\n");
+            // println!("reset: node is {node}, edgevec is {edgevec:?}\n");
             for mut edge in edgevec.iter_mut() {
-                println!("Setting traversed to false for edge {edge:?}");
+                println!("reset: setting traversed to false for edge {edge:?}");
                 edge.traversed = false;
             }
             // println!("");
+        }
+    }
+
+    fn clear(&mut self) {
+        //
+        // Empty the graph of all edges.
+        //
+        for (node, edgevec) in self.adjacency_matrix() {
+			println!("clear: clearing all edges in vec {edgevec:?}");
+            edgevec.clear();
         }
     }
 
@@ -448,6 +454,95 @@ mod tests {
     //     graph.populate();
     //     graph.display();
     // }
+
+    #[test]
+    fn test_find_untraversed_neighbor() {
+        let mut graph = MultiGraph::new();
+
+		println!("-----------------------------------------");
+
+		//
+		// Case 1.  Two-node graph.
+		//			Expect to always find the other A/B node; name it
+		//			explicitly.
+		//
+        graph.add_edge("A", "B", 1, false);
+        graph.add_edge("B", "A", 1, false);
+		assert_eq!(graph.find_untraversed_neighbor("A"), Ok("B".to_string()));
+		assert_eq!(graph.find_untraversed_neighbor("B"), Ok("A".to_string()));
+		println!("-----------------------------------------");
+
+		//
+		// Case 2.  Add a third node, also connected to B.
+		//			Expect to find "some other" node; name it as a member of a
+		//			small vec of allowable nodes.
+		//
+        graph.reset();
+        graph.add_edge("B", "C", 1, false);
+        graph.add_edge("C", "B", 1, false);
+		let mut allowable_nodes = ["A", "C"];
+		let mut result = graph.find_untraversed_neighbor("B").unwrap();
+		assert!(allowable_nodes.contains(&result.as_str()));
+
+		allowable_nodes = ["A", "B"];
+		result = graph.find_untraversed_neighbor("C").unwrap();
+		assert!(allowable_nodes.contains(&result.as_str()));
+		println!("-----------------------------------------");
+
+		//
+		// Case 3.  A fully-populated Konigsberg graph, all edges untraversed.
+		//			Expect to find "some other" node; name it as a member of
+		//			a potentially large HashSet.
+		//
+		graph.clear();
+        graph.populate();
+
+		let allowed: HashSet<&str> = ["B", "C", "D"].iter().cloned().collect();
+		result = graph.find_untraversed_neighbor("A").unwrap();
+		assert!(allowed.contains(&result.as_str()));
+
+		let allowed: HashSet<&str> = ["A", "C", "D"].iter().cloned().collect();
+		result = graph.find_untraversed_neighbor("B").unwrap();
+		assert!(allowed.contains(&result.as_str()));
+
+		let allowed: HashSet<&str> = ["A", "B", "D"].iter().cloned().collect();
+		result = graph.find_untraversed_neighbor("C").unwrap();
+		assert!(allowed.contains(&result.as_str()));
+
+		let allowed: HashSet<&str> = ["A", "B", "C"].iter().cloned().collect();
+		result = graph.find_untraversed_neighbor("D").unwrap();
+		assert!(allowed.contains(&result.as_str()));
+		println!("-----------------------------------------");
+
+		//
+		// Case 4.  A fully-populated Konigsberg graph, all edges *traversed*.
+		//			Expect to always get NoUntraversedEdge.
+		//
+		graph.clear();
+        graph.populate();
+		// mark all as traversed here ...
+        graph.find_untraversed_neighbor("A");
+        graph.find_untraversed_neighbor("B");
+        graph.find_untraversed_neighbor("C");
+        graph.find_untraversed_neighbor("D");
+		println!("-----------------------------------------");
+
+		//
+		// Case 5.  An empty graph.
+		//			Expect to always get NoUntraversedEdge.
+		//
+		graph.clear();
+		assert_eq!(graph.find_untraversed_neighbor("A"),
+					Err(NoUntraversedEdge));
+		assert_eq!(graph.find_untraversed_neighbor("B"),
+					Err(NoUntraversedEdge));
+		assert_eq!(graph.find_untraversed_neighbor("C"),
+					Err(NoUntraversedEdge));
+		assert_eq!(graph.find_untraversed_neighbor("D"),
+					Err(NoUntraversedEdge));
+
+		println!("=========================================");
+	}
 
     #[test]
     fn test_is_traversable() {
