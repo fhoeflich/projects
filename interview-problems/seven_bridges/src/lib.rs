@@ -55,20 +55,18 @@ impl MultiGraph {
         // that node name.
         // If no such edge exists, return NoUntraversedEdge.
         //
-        println!("find_untraversed_neighbor({}): entered", from);
-        //match self.adjacency_matrix().get(from).clone() {
         match self.adjacency_matrix().get(from) {
             Some(edges) => {
                 // Note: using .get() avoids a "no entry found for key"
                 //			panic if no such edge exists.
-                println!("find_untraversed_neighbor: found candidate edge list {edges:?}");
-        		match edges.into_iter().find(|e: &&Edge| !e.traversed) {
-					Some(edge) => {
-					println!("find_untraversed_neighbor: found edge {edge:?}");
-					Ok(edge.to.clone())
-					},
-					None => Err(NoUntraversedEdge),
-        		}
+                //println!("find_untraversed_neighbor: found candidate edge list {edges:?}");
+                match edges.into_iter().find(|e: &&Edge| !e.traversed) {
+                    Some(edge) => {
+                        //println!("find_untraversed_neighbor: found edge {edge:?}");
+                        Ok(edge.to.clone())
+                    }
+                    None => Err(NoUntraversedEdge),
+                }
             }
             None => {
                 return Err(NoUntraversedEdge);
@@ -76,30 +74,30 @@ impl MultiGraph {
         }
     }
 
-    fn populate(&mut self) {
+    fn populate(&mut self, traversed: bool) {
         //
         // Populate the Konigsberg graph:
         // 1. Add the seven bridge edges (A,B), (B,C) etc.
         //    The first bridge from A->B is (A,B,1) and the second is (A,B,2).
         //    All edges are undirected/bidirectional.
         //
-        self.add_edge("A", "B", 1, false); // all from A
-        self.add_edge("A", "B", 2, false);
-        self.add_edge("A", "D", 1, false);
+        self.add_edge("A", "B", 1, traversed); // all from A
+        self.add_edge("A", "B", 2, traversed);
+        self.add_edge("A", "D", 1, traversed);
 
-        self.add_edge("B", "A", 1, false); // all from B
-        self.add_edge("B", "A", 2, false);
-        self.add_edge("B", "C", 1, false);
-        self.add_edge("B", "C", 2, false);
-        self.add_edge("B", "D", 1, false);
+        self.add_edge("B", "A", 1, traversed); // all from B
+        self.add_edge("B", "A", 2, traversed);
+        self.add_edge("B", "C", 1, traversed);
+        self.add_edge("B", "C", 2, traversed);
+        self.add_edge("B", "D", 1, traversed);
 
-        self.add_edge("C", "B", 1, false); // all from C
-        self.add_edge("C", "B", 2, false);
-        self.add_edge("C", "D", 1, false);
+        self.add_edge("C", "B", 1, traversed); // all from C
+        self.add_edge("C", "B", 2, traversed);
+        self.add_edge("C", "D", 1, traversed);
 
-        self.add_edge("D", "A", 1, false); // all from D
-        self.add_edge("D", "B", 1, false);
-        self.add_edge("D", "C", 1, false);
+        self.add_edge("D", "A", 1, traversed); // all from D
+        self.add_edge("D", "B", 1, traversed);
+        self.add_edge("D", "C", 1, traversed);
     }
 
     fn display(&mut self) {
@@ -133,7 +131,7 @@ impl MultiGraph {
         // Empty the graph of all edges.
         //
         for (node, edgevec) in self.adjacency_matrix() {
-			println!("clear: clearing all edges in vec {edgevec:?}");
+            println!("clear: clearing all edges in vec {edgevec:?}");
             edgevec.clear();
         }
     }
@@ -327,7 +325,7 @@ mod tests {
     //    fn test_neighbors() {
     //        let mut graph = MultiGraph::new();
     //
-    //        graph.populate();
+    //        graph.populate(false);
     //
     //        // A->B 1, A->B 2, A->D
     //        assert_eq!(
@@ -451,7 +449,7 @@ mod tests {
     // fn test_display() {
     //     let mut graph = MultiGraph::new();
 
-    //     graph.populate();
+    //     graph.populate(false);
     //     graph.display();
     // }
 
@@ -459,90 +457,104 @@ mod tests {
     fn test_find_untraversed_neighbor() {
         let mut graph = MultiGraph::new();
 
-		println!("-----------------------------------------");
+        println!("-----------------------------------------");
 
-		//
-		// Case 1.  Two-node graph.
-		//			Expect to always find the other A/B node; name it
-		//			explicitly.
-		//
+        //
+        // Case 1.  Two-node graph.
+        //			Expect to always find the other A/B node; name it
+        //			explicitly.
+        //
         graph.add_edge("A", "B", 1, false);
         graph.add_edge("B", "A", 1, false);
-		assert_eq!(graph.find_untraversed_neighbor("A"), Ok("B".to_string()));
-		assert_eq!(graph.find_untraversed_neighbor("B"), Ok("A".to_string()));
-		println!("-----------------------------------------");
 
-		//
-		// Case 2.  Add a third node, also connected to B.
-		//			Expect to find "some other" node; name it as a member of a
-		//			small vec of allowable nodes.
-		//
+        assert_eq!(graph.find_untraversed_neighbor("A"), Ok("B".to_string()));
+        assert_eq!(graph.find_untraversed_neighbor("B"), Ok("A".to_string()));
+        println!("-----------------------------------------");
+
+        //
+        // Case 2.  Add a third node, also connected to B.
+        //			Expect to find "some other" node; name it as a member of a
+        //			small vec of allowable nodes.
+        //
         graph.reset();
         graph.add_edge("B", "C", 1, false);
         graph.add_edge("C", "B", 1, false);
-		let mut allowable_nodes = ["A", "C"];
-		let mut result = graph.find_untraversed_neighbor("B").unwrap();
-		assert!(allowable_nodes.contains(&result.as_str()));
 
-		allowable_nodes = ["A", "B"];
-		result = graph.find_untraversed_neighbor("C").unwrap();
-		assert!(allowable_nodes.contains(&result.as_str()));
-		println!("-----------------------------------------");
+        let mut allowable_nodes = ["A", "C"];
+        let mut result = graph.find_untraversed_neighbor("B").unwrap();
+        assert!(allowable_nodes.contains(&result.as_str()));
 
-		//
-		// Case 3.  A fully-populated Konigsberg graph, all edges untraversed.
-		//			Expect to find "some other" node; name it as a member of
-		//			a potentially large HashSet.
-		//
-		graph.clear();
-        graph.populate();
+        allowable_nodes = ["A", "B"];
+        result = graph.find_untraversed_neighbor("C").unwrap();
+        assert!(allowable_nodes.contains(&result.as_str()));
+        println!("-----------------------------------------");
 
-		let allowed: HashSet<&str> = ["B", "C", "D"].iter().cloned().collect();
-		result = graph.find_untraversed_neighbor("A").unwrap();
-		assert!(allowed.contains(&result.as_str()));
+        //
+        // Case 3.  A fully-populated Konigsberg graph, all edges untraversed.
+        //			Expect to find "some other" node; name it as a member of
+        //			a potentially large HashSet.
+        //
+        graph.clear();
+        graph.populate(false);
 
-		let allowed: HashSet<&str> = ["A", "C", "D"].iter().cloned().collect();
-		result = graph.find_untraversed_neighbor("B").unwrap();
-		assert!(allowed.contains(&result.as_str()));
+        let allowed: HashSet<&str> = ["B", "C", "D"].iter().cloned().collect();
+        result = graph.find_untraversed_neighbor("A").unwrap();
+        assert!(allowed.contains(&result.as_str()));
 
-		let allowed: HashSet<&str> = ["A", "B", "D"].iter().cloned().collect();
-		result = graph.find_untraversed_neighbor("C").unwrap();
-		assert!(allowed.contains(&result.as_str()));
+        let allowed: HashSet<&str> = ["A", "C", "D"].iter().cloned().collect();
+        result = graph.find_untraversed_neighbor("B").unwrap();
+        assert!(allowed.contains(&result.as_str()));
 
-		let allowed: HashSet<&str> = ["A", "B", "C"].iter().cloned().collect();
-		result = graph.find_untraversed_neighbor("D").unwrap();
-		assert!(allowed.contains(&result.as_str()));
-		println!("-----------------------------------------");
+        let allowed: HashSet<&str> = ["A", "B", "D"].iter().cloned().collect();
+        result = graph.find_untraversed_neighbor("C").unwrap();
+        assert!(allowed.contains(&result.as_str()));
 
-		//
-		// Case 4.  A fully-populated Konigsberg graph, all edges *traversed*.
-		//			Expect to always get NoUntraversedEdge.
-		//
-		graph.clear();
-        graph.populate();
-		// mark all as traversed here ...
-        graph.find_untraversed_neighbor("A");
-        graph.find_untraversed_neighbor("B");
-        graph.find_untraversed_neighbor("C");
-        graph.find_untraversed_neighbor("D");
-		println!("-----------------------------------------");
+        let allowed: HashSet<&str> = ["A", "B", "C"].iter().cloned().collect();
+        result = graph.find_untraversed_neighbor("D").unwrap();
+        assert!(allowed.contains(&result.as_str()));
+        println!("-----------------------------------------");
 
-		//
-		// Case 5.  An empty graph.
-		//			Expect to always get NoUntraversedEdge.
-		//
-		graph.clear();
-		assert_eq!(graph.find_untraversed_neighbor("A"),
-					Err(NoUntraversedEdge));
-		assert_eq!(graph.find_untraversed_neighbor("B"),
-					Err(NoUntraversedEdge));
-		assert_eq!(graph.find_untraversed_neighbor("C"),
-					Err(NoUntraversedEdge));
-		assert_eq!(graph.find_untraversed_neighbor("D"),
-					Err(NoUntraversedEdge));
+        //
+        // Case 4.  A fully-populated Konigsberg graph, all edges *traversed*.
+        //			Expect to always get NoUntraversedEdge.
+        //
+        graph.clear();
+        graph.populate(true);
 
-		println!("=========================================");
-	}
+        let mut err_result = graph.find_untraversed_neighbor("A").unwrap_err();
+        assert_eq!(err_result, NoUntraversedEdge);
+
+        err_result = graph.find_untraversed_neighbor("B").unwrap_err();
+        assert_eq!(err_result, NoUntraversedEdge);
+
+        err_result = graph.find_untraversed_neighbor("C").unwrap_err();
+        assert_eq!(err_result, NoUntraversedEdge);
+
+        err_result = graph.find_untraversed_neighbor("D").unwrap_err();
+        assert_eq!(err_result, NoUntraversedEdge);
+
+        println!("-----------------------------------------");
+
+        //
+        // Case 5.  An empty graph.
+        //			Expect to always get NoUntraversedEdge.
+        //
+        graph.clear();
+
+        err_result = graph.find_untraversed_neighbor("A").unwrap_err();
+        assert_eq!(err_result, NoUntraversedEdge);
+
+        err_result = graph.find_untraversed_neighbor("B").unwrap_err();
+        assert_eq!(err_result, NoUntraversedEdge);
+
+        err_result = graph.find_untraversed_neighbor("C").unwrap_err();
+        assert_eq!(err_result, NoUntraversedEdge);
+
+        err_result = graph.find_untraversed_neighbor("D").unwrap_err();
+        assert_eq!(err_result, NoUntraversedEdge);
+
+        println!("=========================================");
+    }
 
     #[test]
     fn test_is_traversable() {
@@ -589,7 +601,7 @@ mod tests {
         //
         // Case 4.  The Seven Bridges of Konigsberg graph.
         //
-        // graph.populate();
+        // graph.populate(false);
         // let traversable = graph.is_traversable(&mut queue);
         // if traversable {
         // 	println!("Graph is traversable. Traversed graph is: {:?}",
@@ -603,6 +615,6 @@ mod tests {
     // fn test_konigsberg() {
     //     let mut graph = MultiGraph::new();
 
-    //     graph.populate();
+    //     graph.populate(false);
     // }
 }
