@@ -108,7 +108,6 @@ impl MultiGraph {
         for (node, edgevec) in self.adjacency_matrix() {
             println!("node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter() {
-                // println!("edge is {edge:?}");
                 print!("{} -> {}({})  ", edge.from, edge.to, edge.id);
             }
             // println!("");
@@ -181,60 +180,6 @@ impl MultiGraph {
 
         return Err(NoUntraversedEdge);
     }
-
-    // pub fn traverse_all(&mut self, from: &str)
-    //
-    // Traverse all paths starting from node `from'.
-    // XXX: I suppose the return value should be the number of
-    //		traversals completed, i.e. you get back to `from'.
-    //
-    // 	let mut ntraversed = 0;
-
-    //   for (node, mut edgevec) in self.adjacency_matrix().clone() {
-    //     for starter_edge in edgevec.iter_mut() {
-    //           let from: String = starter_edge.from.clone();
-    //           match from {
-    //               ref val if *val == "A".to_string() => {
-    //       			// for edge in self.neighbors(&from).iter_mut() {
-    //       			for edge in edgevec.iter_mut() {
-    // 						if edge.traversed == true {
-    // 							continue;
-    // 						}
-    // 						edge.traversed = true;
-    // 						ntraversed += 1;
-    // 						println!("edge.from ======> {:?}",
-    // 									edge.from);
-    // 						println!("edge.to ======> {:?}",
-    // 									edge.to);
-    // 						println!("edge.id ======> {:?}",
-    // 									edge.id);
-    // println!("edge.traversed ======> {:?}",
-    // 			edge.traversed);
-    // 					}
-
-    // 					if (ntraversed == 0) {
-    // all edges starting at `from' have been traversed.
-    // 						println!("all edges from node {} have been traversed",
-    // 									from);
-    // 					}
-    //              }
-    //               ref val if *val == "B".to_string() => {
-    // println!("=======> {:?}", self.neighbors(&from).unwrap());
-    // 			}
-    //                 ref val if *val == "C".to_string() => {
-    // println!("=======> {:?}", self.neighbors(&from).unwrap());
-    // 				}
-    //                 ref val if *val == "D".to_string() => {
-    // println!("=======> {:?}", self.neighbors(&from).unwrap());
-    // 				}
-    //                 _ => {
-    // 					panic!("Node not found: {:?}", from);
-    // 				}
-    //            	}
-    // 			println!("");
-    //         }
-    //     }
-    // }
 
     pub fn dfs(&mut self, start_node: String, current_node: String) -> bool {
         //
@@ -314,34 +259,6 @@ impl MultiGraph {
         return false;
     }
 
-    //        loop {
-    //            println!("dfs: top of loop - dest is {dest:?}");
-    //            match dest {
-    //                Ok(child) => {
-    //                    println!("dfs: child is {child:?}");
-    //                    // If all subgraph edges have been traversed here,
-    //                    // we've done it!  Mark edge traversed and return true.
-    //					//
-    //					// Note:  this is where we would push the edge onto
-    //					// a queue or stack of traversed edges to see the
-    //					// solution.
-    //					//
-    //					let edge = self.from_to_edge(child.as_str(), false).unwrap();
-    //                    println!("dfs: Ok Edge is {edge:?}");
-    //					Ok(edge).traversed = true;
-    //                    break;
-    //                }
-    //
-    //                Err(NoUntraversedEdge) => {
-    //                    println!("dfs: Err(NoUntraversedEdge) case, returning false");
-    //                    return false;
-    //                }
-    //            }
-    //        }
-    //
-    //        return true;
-    //}
-
     pub fn is_traversable(&mut self, queue: &mut VecDeque<Edge>) -> bool {
         //
         // Try to traverse all paths starting from node `from'.
@@ -363,13 +280,6 @@ impl MultiGraph {
             traversed: false,
         };
         let mut original_node: String = String::new();
-
-        // let mut found_edge = Edge {
-        //     from: "".to_string(),
-        //     to: "".to_string(),
-        //     id: 0,
-        //     traversed: false,
-        // };
 
         for (node, mut edgevec) in self.adjacency_matrix() {
             for mut edge in edgevec.iter_mut() {
@@ -393,7 +303,6 @@ impl MultiGraph {
                 // once-per-edge.
                 //
                 edge.traversed = true;
-                // found_edge = edge.clone();
 
                 // XXX: add a trait so add_edge() can accept one Edge arg
                 //		instead of four individual Edge field args.
@@ -452,22 +361,6 @@ impl MultiGraph {
     //        }
     //    }
 }
-
-//impl Iterator for MultiGraph {
-//    type Item = Edge;
-//    fn next(&mut self) -> Option<Self::Item> {
-// if self.start >= self.end {
-//     return None;
-// }
-// let result = Some(self.start);
-//        let hm = self.adjacency_matrix();
-//        let result = hm.get_key_value("B");
-//        println!("result is {:?}", result);
-// self.start += 1;
-// result
-//        None
-//    }
-//}
 
 #[cfg(test)]
 mod tests {
