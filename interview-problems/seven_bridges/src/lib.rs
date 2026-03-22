@@ -3,6 +3,8 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::io::Error;
+use log::{info, trace, warn};
+use simple_logger::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct NodeNotInGraph; // custom error type if node is not found in graph
@@ -60,10 +62,10 @@ impl MultiGraph {
             Some(edges) => {
                 // Note: using .get() avoids a "no entry found for key"
                 //			panic if no such edge exists.
-                //println!("find_untraversed_neighbor: found candidate edge list {edges:?}");
+                //info!("find_untraversed_neighbor: found candidate edge list {edges:?}");
                 match edges.into_iter().find(|e: &&Edge| !e.traversed) {
                     Some(edge) => {
-                        println!("find_untraversed_neighbor: found edge {edge:?}");
+                        info!("find_untraversed_neighbor: found edge {edge:?}");
                         Ok(edge.to.clone())
                     }
 
@@ -106,11 +108,11 @@ impl MultiGraph {
     fn display(&mut self) {
         // Print out a simple ASCII A->B version of the graph.
         for (node, edgevec) in self.adjacency_matrix() {
-            println!("node is {node}, edgevec is {edgevec:?}\n");
+            info!("node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter() {
                 print!("{} -> {}({})  ", edge.from, edge.to, edge.id);
             }
-            // println!("");
+            // info!("");
         }
     }
 
@@ -119,12 +121,12 @@ impl MultiGraph {
         // Reset all edges of the graph to not traversed.
         //
         for (node, edgevec) in self.adjacency_matrix() {
-            // println!("reset: node is {node}, edgevec is {edgevec:?}\n");
+            // info!("reset: node is {node}, edgevec is {edgevec:?}\n");
             for mut edge in edgevec.iter_mut() {
-                //println!("reset: setting traversed to false for edge {edge:?}");
+                //info!("reset: setting traversed to false for edge {edge:?}");
                 edge.traversed = false;
             }
-            // println!("");
+            // info!("");
         }
     }
 
@@ -133,7 +135,7 @@ impl MultiGraph {
         // Empty the graph of all edges.
         //
         for (node, edgevec) in self.adjacency_matrix() {
-            //println!("clear: clearing all edges in vec {edgevec:?}");
+            //info!("clear: clearing all edges in vec {edgevec:?}");
             edgevec.clear();
         }
     }
@@ -144,15 +146,15 @@ impl MultiGraph {
         // otherwise at least one is untraversed (false).
         //
         for (node, edgevec) in self.adjacency_matrix() {
-            //println!("all_traversed: node is {node}, edgevec is {edgevec:?}\n");
+            //info!("all_traversed: node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter_mut() {
-                println!("all_traversed: processing edge {edge:?}");
+                info!("all_traversed: processing edge {edge:?}");
                 if edge.traversed == false {
-                    println!("all_traversed: found untraversed edge {edge:?}");
+                    info!("all_traversed: found untraversed edge {edge:?}");
                     return false;
                 }
             }
-            println!("");
+            info!("");
         }
 
         return true;
@@ -167,15 +169,15 @@ impl MultiGraph {
         // Map a from node to an Edge with the indicated `traversed' value.
         //
         for (node, edgevec) in self.adjacency_matrix() {
-            //println!("from_to_edge: node is {node}, edgevec is {edgevec:?}\n");
+            //info!("from_to_edge: node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter_mut() {
-                //println!("from_to_edge: processing edge {edge:?}");
+                //info!("from_to_edge: processing edge {edge:?}");
                 if edge.from == *from && edge.traversed == traversed {
-                    //println!("from_to_edge: found matching edge {edge:?}");
+                    //info!("from_to_edge: found matching edge {edge:?}");
                     return Ok(edge);
                 }
             }
-            //println!("");
+            //info!("");
         }
 
         return Err(NoUntraversedEdge);
@@ -193,20 +195,20 @@ impl MultiGraph {
         //	3. The terminal node is `current_node', i.e. the path is a cycle.
         // otherwise return false.
         //
-        println!("dfs: start_node is {start_node} current_node is {current_node}");
+        info!("dfs: start_node is {start_node} current_node is {current_node}");
 
         if self.all_traversed() {
             if current_node == start_node {
-                println!("dfs: got success on {current_node}!");
+                info!("dfs: got success on {current_node}!");
                 return true;
             } else {
                 // this path failed
-                println!("dfs: got failure on {current_node} :-@(");
+                info!("dfs: got failure on {current_node} :-@(");
                 return false;
             }
         }
 
-        println!("dfs: for mut next_node loop");
+        info!("dfs: for mut next_node loop");
         for mut next_node in self.find_untraversed_neighbor(current_node).iter_mut() {
             match next_node {
                 //
@@ -215,7 +217,7 @@ impl MultiGraph {
                 //		which don't require references anyway.
                 //
                 ref val if **val == "A".to_string() => {
-                    println!("dfs: candidate next node is {next_node}");
+                    info!("dfs: candidate next node is {next_node}");
                     let edge: Result<&mut Edge, NoUntraversedEdge> =
                         self.from_to_edge(&next_node, false);
                     let new_current_node: String;
@@ -232,7 +234,7 @@ impl MultiGraph {
                 }
 
                 ref val if **val == "B".to_string() => {
-                    println!("dfs: candidate next node is {next_node}");
+                    info!("dfs: candidate next node is {next_node}");
                     let edge: Result<&mut Edge, NoUntraversedEdge> =
                         self.from_to_edge(&next_node, false);
                     let new_current_node: String;
@@ -250,7 +252,7 @@ impl MultiGraph {
 
                 _ => {
                     // this path failed
-                    println!("dfs: got NoUntraversedEdge");
+                    info!("dfs: got NoUntraversedEdge");
                     return false;
                 }
             }
@@ -310,7 +312,7 @@ impl MultiGraph {
                 queue.push_back(edge.clone());
 
                 if mru_edge.from != "" {
-                    //println!(
+                    //info!(
                     //   "MRU edge is {:?}, current edge is {:?}, != is {}",
                     //  mru_edge,
                     //    edge,
@@ -322,18 +324,18 @@ impl MultiGraph {
                 }
                 mru_edge = edge.clone();
 
-                //println!("Done with {:?}", edge);
+                //info!("Done with {:?}", edge);
             }
         }
 
-        //println!("Done all edges.");
+        //info!("Done all edges.");
 
         //
         // If edge.to == original_edge.from and all edges have been traversed,
         // set traversable to true.  Otherwise, we failed and it should be
         // set to false.
         //
-        //println!(
+        //info!(
         //    "original_node is {}, mru_edge.to is {:?}",
         //    original_node, mru_edge.to
         //);
@@ -502,7 +504,9 @@ mod tests {
     fn test_find_untraversed_neighbor() {
         let mut graph = MultiGraph::new();
 
-        //println!("-----------------------------------------");
+		simple_logger::init().unwrap();
+
+        //info!("-----------------------------------------");
 
         //
         // Case 1.  Two-node graph.
@@ -520,7 +524,7 @@ mod tests {
             graph.find_untraversed_neighbor("B".to_string()),
             Ok("A".to_string())
         );
-        //println!("-----------------------------------------");
+        //info!("-----------------------------------------");
 
         //
         // Case 2.  Add a third node, also connected to B.
@@ -538,7 +542,7 @@ mod tests {
         allowable_nodes = ["A", "B"];
         result = graph.find_untraversed_neighbor("C".to_string()).unwrap();
         assert!(allowable_nodes.contains(&result.as_str()));
-        //println!("-----------------------------------------");
+        //info!("-----------------------------------------");
 
         //
         // Case 3.  A fully-populated Konigsberg graph, all edges untraversed.
@@ -563,7 +567,7 @@ mod tests {
         let allowed: HashSet<&str> = ["A", "B", "C"].iter().cloned().collect();
         result = graph.find_untraversed_neighbor("D".to_string()).unwrap();
         assert!(allowed.contains(&result.as_str()));
-        //println!("-----------------------------------------");
+        //info!("-----------------------------------------");
 
         //
         // Case 4.  A fully-populated Konigsberg graph, all edges *traversed*.
@@ -592,7 +596,7 @@ mod tests {
             .unwrap_err();
         assert_eq!(err_result, NoUntraversedEdge);
 
-        //println!("-----------------------------------------");
+        //info!("-----------------------------------------");
 
         //
         // Case 5.  An empty graph.
@@ -620,7 +624,7 @@ mod tests {
             .unwrap_err();
         assert_eq!(err_result, NoUntraversedEdge);
 
-        //println!("=========================================");
+        //info!("=========================================");
     }
 
     #[test]
@@ -628,6 +632,8 @@ mod tests {
         let mut graph = MultiGraph::new();
         let mut queue = VecDeque::new();
         let mut traversable = false;
+
+		simple_logger::init().unwrap();
 
         //
         // Case 1.  A simple two-node graph which is traversable.
@@ -647,7 +653,7 @@ mod tests {
         //assert_eq!(graph.dfs(root), true);
 
         //assert!(graph.is_traversable(&mut queue));
-        //println!("Traversed queue is: {:?}", queue);
+        //info!("Traversed queue is: {:?}", queue);
 
         //
         // Case 2.  A simple three-node graph which is NOT traversable.
@@ -661,7 +667,7 @@ mod tests {
         graph.find_untraversed_neighbor("C".to_string());
 
         assert!(graph.is_traversable(&mut queue));
-        //println!("Traversed queue is: {:?}", queue);
+        //info!("Traversed queue is: {:?}", queue);
 
         //
         // Case 3.  A simple three-node graph which IS traversable.
@@ -679,10 +685,10 @@ mod tests {
         // graph.populate(false);
         // let traversable = graph.is_traversable(&mut queue);
         // if traversable {
-        // 	println!("Graph is traversable. Traversed graph is: {:?}",
+        // 	info!("Graph is traversable. Traversed graph is: {:?}",
         // 				traversed);
         // } else {
-        // 	println!("Graph is not traversable.");
+        // 	info!("Graph is not traversable.");
         // }
     }
 
