@@ -14,6 +14,12 @@ Sample applications needed for portfolio:
 7. Expand/extend current Jetson Nano ML project to include several different
 	bottles, plus a spreadsheet of no. of photographs taken to train and %
 	accuracy identifying them.
+8. Build an AI robot that responds to spoken commands and performs simple
+	tasks (fetch a pencil, check a webcam to see who's at the door, go recharge
+	itself etc.).  Stretch goal:  robot will respond to commands at highest
+	priority, but will fill in its own time once that is done.  So build the
+	robot a small "pet" robot that it will feed, walk etc. whenever it isn't
+	doing something for humans.
 
 Interview problems:
 1. Rust implementation of DSA algorithms for BSTs
