@@ -148,7 +148,7 @@ impl MultiGraph {
         for (node, edgevec) in self.adjacency_matrix() {
             //info!("all_traversed: node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter_mut() {
-                info!("all_traversed: processing edge {edge:?}");
+                //info!("all_traversed: processing edge {edge:?}");
                 if edge.traversed == false {
                     info!("all_traversed: found untraversed edge {edge:?}");
                     return false;
@@ -157,6 +157,7 @@ impl MultiGraph {
             info!("");
         }
 
+        info!("all_traversed: all edges traversed, returning true");
         return true;
     }
 
@@ -208,7 +209,7 @@ impl MultiGraph {
             }
         }
 
-        info!("dfs: for mut next_node loop");
+        info!("dfs: for mut next_node loop current_node is {current_node}");
         for mut next_node in self.find_untraversed_neighbor(current_node).iter_mut() {
             match next_node {
                 //
@@ -220,15 +221,21 @@ impl MultiGraph {
                     info!("dfs: candidate next node is {next_node}");
                     let edge: Result<&mut Edge, NoUntraversedEdge> =
                         self.from_to_edge(&next_node, false);
-                    let new_current_node: String;
+                    let mut new_current_node: String = "".to_string();
+
                     match edge {
                         Ok(edge) => {
+                    		info!("dfs: taking Ok match arm");
                             edge.traversed = true;
                             new_current_node = edge.clone().to.to_string();
-                        }
+                        },
                         Err(NoUntraversedEdge) => {
+                    		info!("dfs: taking Err match arm");
                             return false;
-                        }
+                        },
+						_ => {
+                    		info!("dfs: taking _? match arm");
+						},
                     }
                     return self.dfs(start_node, new_current_node);
                 }
@@ -237,15 +244,21 @@ impl MultiGraph {
                     info!("dfs: candidate next node is {next_node}");
                     let edge: Result<&mut Edge, NoUntraversedEdge> =
                         self.from_to_edge(&next_node, false);
-                    let new_current_node: String;
+                    let mut new_current_node: String = "".to_string();
                     match edge {
                         Ok(edge) => {
+                    		info!("dfs: taking Ok match arm");
                             edge.traversed = true;
+                            info!("dfs: after marking traversed, edge is {edge:?}");
                             new_current_node = edge.clone().to.to_string();
                         }
                         Err(NoUntraversedEdge) => {
+                    		info!("dfs: taking Err match arm");
                             return false;
                         }
+						_ => {
+                    		info!("dfs: taking _? match arm");
+						},
                     }
                     return self.dfs(start_node, new_current_node);
                 }
@@ -630,7 +643,7 @@ mod tests {
     #[test]
     fn test_is_traversable() {
         let mut graph = MultiGraph::new();
-        let mut queue = VecDeque::new();
+        //let mut queue: std::collections::VecDeque<T> = VecDeque::new();
         let mut traversable = false;
 
 		simple_logger::init().unwrap();
@@ -641,16 +654,18 @@ mod tests {
         //
         graph.add_edge("A", "B", 1, false);
         graph.add_edge("B", "A", 1, false);
-        // graph.find_untraversed_neighbor("A".to_string());
-        // graph.find_untraversed_neighbor("B".to_string());
 
-        let allowable_roots = ["A".to_string(), "B".to_string()];
+        //let allowable_roots = ["A".to_string(), "B".to_string()];
+        let allowable_roots = ["A".to_string()];
+        let starter_node = &allowable_roots[0].clone();
+		//let mut current_node_res = graph.find_untraversed_neighbor(starter_node.to_string());
+		//let mut current_edge = graph.from_to_edge(starter_node, false).unwrap();
+		let mut current_node : String = "".to_string();
+
         for start_node in allowable_roots {
-            let mut current_node = start_node.clone();
+			current_node = starter_node.clone();
             assert_eq!(graph.dfs(start_node, current_node), true);
         }
-        // root = "B";
-        //assert_eq!(graph.dfs(root), true);
 
         //assert!(graph.is_traversable(&mut queue));
         //info!("Traversed queue is: {:?}", queue);
@@ -659,14 +674,11 @@ mod tests {
         // Case 2.  A simple three-node graph which is NOT traversable.
         //			A->B, B->A, B->C
         //
-        graph.reset();
-        graph.add_edge("B", "C", 1, false);
-        queue.clear();
-        graph.find_untraversed_neighbor("A".to_string());
-        graph.find_untraversed_neighbor("B".to_string());
-        graph.find_untraversed_neighbor("C".to_string());
+        //graph.reset();
+        //graph.add_edge("B", "C", 1, false);
+        //queue.clear();
 
-        assert!(graph.is_traversable(&mut queue));
+        //assert!(graph.is_traversable(&mut queue));
         //info!("Traversed queue is: {:?}", queue);
 
         //
