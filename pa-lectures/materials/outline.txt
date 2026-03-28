@@ -1,0 +1,46 @@
+Topic: Materials and dilutions
+
+I. Materials
+	A. Material safety
+		i. For the perfumer
+		ii. For the material
+
+	B. Material types and properties
+		i. Examples: flowing liquids
+		ii. Examples: viscous liquids
+		iii. Examples: crystalline powders
+		iv. Examples: resins
+
+	C. Material handling
+		i. Refrigeration/spoilage discussion
+		ii. Care in handling/prep
+		iii. Expiration
+		iv. Inventory management
+		v. Equipment for preparing materials
+			a. Scale
+			b. Hotplate
+			c. Hot water bath
+			d. Pipettes
+			e. Test strips
+			f. Microwave oven
+			g. Labware (beakers, spoons)
+			h. Optional - mechanized stirrers, mechanized baths, sonicators
+		vi. Sustainability and responsibility
+			a. Dealing with used pipettes
+			b. Dealing with expired materials
+
+II. Dilutions
+	A. Math
+		Examples: 10%, 1%
+		Examples: Sandela 85
+		Caution: Isoraldeine 70/95
+	B. Material evaluations
+		i. Smelling
+		ii. Substantivity
+		iii. Building a database
+	C. Diluents
+	D. For workability and preservability
+	E. Potent materials
+		i. Examples: Geosmin 1%
+		ii. Examples: Indole 1%
+		iii. Examples: Dimethyl Sulfide
