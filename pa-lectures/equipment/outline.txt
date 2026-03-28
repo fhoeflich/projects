@@ -1,0 +1,32 @@
+Topic: Equipment
+
+I. Scale
+	A. Precision
+	B. Accuracy
+	C. Range
+		i. Low weights: materials
+		ii. High weights: full bottles/beakers
+	D. Quality
+		i. Basic lab usage
+		ii. Jewelry/portable
+
+II. Bottles/vials/caps
+	A. Plastic/glass
+	B. 15ml Boston Amber - dilutions, evals
+	C. 8oz/16oz - bases, blends
+	D. Caps
+		i. Metal
+		ii. Polycone lined
+
+III. Tools
+	A. Spoons/scoops
+	B. Probes
+	C. Tweezers/forceps
+
+IV. Labware
+	A. Beakers
+		i. Plain glass
+		ii. Borosilicate
+	B. Funnels
+	C. Graduated cylinders
+	D. Filter papers
