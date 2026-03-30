@@ -210,62 +210,25 @@ impl MultiGraph {
         }
 
         info!("dfs: for mut next_node loop current_node is {current_node}");
-        for mut next_node in self.find_untraversed_neighbor(current_node).iter_mut() {
-            match next_node {
-                //
-                // Note: perform all operations requiring references to
-                //		edge *first*, then clone it and do any operations
-                //		which don't require references anyway.
-                //
-                ref val if **val == "A".to_string() => {
-                    info!("dfs: candidate next node is {next_node}");
-                    let edge: Result<&mut Edge, NoUntraversedEdge> =
-                        self.from_to_edge(&next_node, false);
-                    let mut new_current_node: String = "".to_string();
+        for mut next_node in self.find_untraversed_neighbor(current_node.clone()).iter_mut() {
+            info!("dfs: candidate next node is {next_node}");
+            // Find the edge from current_node to next_node and mark it as traversed
+            let edge: Result<&mut Edge, NoUntraversedEdge> =
+                self.from_to_edge(&current_node, false);
+            let mut new_current_node: String = "".to_string();
 
-                    match edge {
-                        Ok(edge) => {
-                    		info!("dfs: taking Ok match arm");
-                            edge.traversed = true;
-                            new_current_node = edge.clone().to.to_string();
-                        },
-                        Err(NoUntraversedEdge) => {
-                    		info!("dfs: taking Err match arm");
-                            return false;
-                        },
-						_ => {
-                    		info!("dfs: taking _? match arm");
-						},
+            match edge {
+                Ok(edge) => {
+                    info!("dfs: taking Ok match arm");
+                    if edge.to == *next_node {
+                        edge.traversed = true;
+                        info!("dfs: after marking traversed, edge is {edge:?}");
+                        new_current_node = edge.clone().to.to_string();
+                        return self.dfs(start_node, new_current_node);
                     }
-                    return self.dfs(start_node, new_current_node);
-                }
-
-                ref val if **val == "B".to_string() => {
-                    info!("dfs: candidate next node is {next_node}");
-                    let edge: Result<&mut Edge, NoUntraversedEdge> =
-                        self.from_to_edge(&next_node, false);
-                    let mut new_current_node: String = "".to_string();
-                    match edge {
-                        Ok(edge) => {
-                    		info!("dfs: taking Ok match arm");
-                            edge.traversed = true;
-                            info!("dfs: after marking traversed, edge is {edge:?}");
-                            new_current_node = edge.clone().to.to_string();
-                        }
-                        Err(NoUntraversedEdge) => {
-                    		info!("dfs: taking Err match arm");
-                            return false;
-                        }
-						_ => {
-                    		info!("dfs: taking _? match arm");
-						},
-                    }
-                    return self.dfs(start_node, new_current_node);
-                }
-
-                _ => {
-                    // this path failed
-                    info!("dfs: got NoUntraversedEdge");
+                },
+                Err(NoUntraversedEdge) => {
+                    info!("dfs: taking Err match arm");
                     return false;
                 }
             }
@@ -646,7 +609,7 @@ mod tests {
         //let mut queue: std::collections::VecDeque<T> = VecDeque::new();
         let mut traversable = false;
 
-		simple_logger::init().unwrap();
+		let _ = simple_logger::init();
 
         //
         // Case 1.  A simple two-node graph which is traversable.
