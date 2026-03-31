@@ -618,16 +618,11 @@ mod tests {
         graph.add_edge("A", "B", 1, false);
         graph.add_edge("B", "A", 1, false);
 
-        //let allowable_roots = ["A".to_string(), "B".to_string()];
-        let allowable_roots = ["A".to_string()];
-        let starter_node = &allowable_roots[0].clone();
-		//let mut current_node_res = graph.find_untraversed_neighbor(starter_node.to_string());
-		//let mut current_edge = graph.from_to_edge(starter_node, false).unwrap();
-		let mut current_node : String = "".to_string();
+        let allowable_roots: [String; 2] = ["A".to_string(), "B".to_string()];
 
         for start_node in allowable_roots {
-			current_node = starter_node.clone();
-            assert_eq!(graph.dfs(start_node, current_node), true);
+            assert_eq!(graph.dfs(start_node.clone(), start_node.clone()), true);
+            graph.reset();
         }
 
         //assert!(graph.is_traversable(&mut queue));
