@@ -31,3 +31,4 @@ Some fun items:
 1. Sudoku game (Rust/Slint exercise)
 2. Design a robot into which you can drop a locked padlock, and it will use AI
 	techniques to pick it.
+3. Mah Jongg solver (Rust/Slint exercise)
