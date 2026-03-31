@@ -1,10 +1,10 @@
 #![allow(unused)]
 
+use log::{info, trace, warn};
+use simple_logger::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::io::Error;
-use log::{info, trace, warn};
-use simple_logger::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct NodeNotInGraph; // custom error type if node is not found in graph
@@ -210,7 +210,10 @@ impl MultiGraph {
         }
 
         info!("dfs: for mut next_node loop current_node is {current_node}");
-        for mut next_node in self.find_untraversed_neighbor(current_node.clone()).iter_mut() {
+        for mut next_node in self
+            .find_untraversed_neighbor(current_node.clone())
+            .iter_mut()
+        {
             info!("dfs: candidate next node is {next_node}");
             // Find the edge from current_node to next_node and mark it as traversed
             let edge: Result<&mut Edge, NoUntraversedEdge> =
@@ -226,7 +229,7 @@ impl MultiGraph {
                         new_current_node = edge.clone().to.to_string();
                         return self.dfs(start_node, new_current_node);
                     }
-                },
+                }
                 Err(NoUntraversedEdge) => {
                     info!("dfs: taking Err match arm");
                     return false;
@@ -480,7 +483,7 @@ mod tests {
     fn test_find_untraversed_neighbor() {
         let mut graph = MultiGraph::new();
 
-		simple_logger::init().unwrap();
+        simple_logger::init().unwrap();
 
         //info!("-----------------------------------------");
 
@@ -609,7 +612,7 @@ mod tests {
         //let mut queue: std::collections::VecDeque<T> = VecDeque::new();
         let mut traversable = false;
 
-		let _ = simple_logger::init();
+        let _ = simple_logger::init();
 
         //
         // Case 1.  A simple two-node graph which is traversable.
@@ -625,6 +628,7 @@ mod tests {
             graph.reset();
         }
 
+        // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.
         //assert!(graph.is_traversable(&mut queue));
         //info!("Traversed queue is: {:?}", queue);
 
@@ -632,21 +636,37 @@ mod tests {
         // Case 2.  A simple three-node graph which is NOT traversable.
         //			A->B, B->A, B->C
         //
-        //graph.reset();
-        //graph.add_edge("B", "C", 1, false);
+        graph.reset();
+        graph.add_edge("B", "C", 1, false);
         //queue.clear();
 
+        let allowable_roots: [String; 3] = ["A".to_string(), "B".to_string(), "C".to_string()];
+
+        for start_node in &allowable_roots {
+            assert_eq!(graph.dfs(start_node.clone(), start_node.clone()), false);
+            graph.reset();
+        }
+
+        // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.
         //assert!(graph.is_traversable(&mut queue));
         //info!("Traversed queue is: {:?}", queue);
 
         //
-        // Case 3.  A simple three-node graph which IS traversable.
-        //			A->B, B->A, A->C, C->A, B->C, C->B
+        // Case 3.  A simple three-node graph which is traversable.
+        //            A->B, B->C, C->A (or any cyclic permutation
+        //            thereof, e.g. A->C, C->B, B->A).
         //
-        // graph.reset();
-        // graph.add_edge("A", "C", 1, false);
-        // graph.add_edge("C", "A", 1, false);
-        // graph.add_edge("C", "B", 1, false);
+        graph.clear();
+        graph.add_edge("A", "B", 1, false);
+        graph.add_edge("B", "C", 1, false);
+        graph.add_edge("C", "A", 1, false);
+
+        for start_node in &allowable_roots {
+            assert_eq!(graph.dfs(start_node.clone(), start_node.clone()), true);
+            graph.reset();
+        }
+
+        // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.
         // assert!(!graph.is_traversable(&mut queue));
 
         //
@@ -655,10 +675,9 @@ mod tests {
         // graph.populate(false);
         // let traversable = graph.is_traversable(&mut queue);
         // if traversable {
-        // 	info!("Graph is traversable. Traversed graph is: {:?}",
-        // 				traversed);
+        //     info!("Graph is traversable. Traversed graph is: {:?}", traversed);
         // } else {
-        // 	info!("Graph is not traversable.");
+        //     info!("Graph is not traversable.");
         // }
     }
 
