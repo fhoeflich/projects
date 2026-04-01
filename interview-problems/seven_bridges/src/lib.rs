@@ -184,60 +184,145 @@ impl MultiGraph {
         return Err(NoUntraversedEdge);
     }
 
-    pub fn dfs(&mut self, start_node: String, current_node: String) -> bool {
+    fn degree(&self, node: &str) -> usize {
         //
-        // Perform a depth-first search of untraversed edges attached
-        //	to `current_node'.
+        // Count the number of untraversed edges from the given node (out-degree).
         //
-        // Return true iff:
-        //	1. At least one edge was traversed (i.e. at least one new node
-        //		was visited);
-        //	2. *All* available untraversed edges were tried; and
-        //	3. The terminal node is `current_node', i.e. the path is a cycle.
-        // otherwise return false.
-        //
-        info!("dfs: start_node is {start_node} current_node is {current_node}");
+        match self.adjacency_matrix.get(node) {
+            Some(edges) => edges.iter().filter(|e| !e.traversed).count(),
+            None => 0,
+        }
+    }
 
-        if self.all_traversed() {
-            if current_node == start_node {
-                info!("dfs: got success on {current_node}!");
-                return true;
-            } else {
-                // this path failed
-                info!("dfs: got failure on {current_node} :-@(");
+    fn in_degree(&self, node: &str) -> usize {
+        //
+        // Count the number of untraversed edges coming into the given node (in-degree).
+        //
+        let mut count = 0;
+        for edges in self.adjacency_matrix.values() {
+            for edge in edges.iter() {
+                if edge.to == node && !edge.traversed {
+                    count += 1;
+                }
+            }
+        }
+        count
+    }
+
+    fn has_eulerian_path(&self) -> bool {
+        //
+        // Check if an Eulerian path exists in this directed graph.
+        // For a directed graph:
+        // - Eulerian circuit exists if every vertex has in-degree = out-degree
+        // - Eulerian path exists if at most one vertex has (out-degree - in-degree = 1)
+        //   and at most one vertex has (in-degree - out-degree = 1)
+        //
+        let mut start_nodes = 0;  // vertices with out-degree - in-degree = 1
+        let mut end_nodes = 0;    // vertices with in-degree - out-degree = 1
+
+        for node in self.adjacency_matrix.keys() {
+            let out_deg = self.degree(node) as i32;
+            let in_deg = self.in_degree(node) as i32;
+            let diff = out_deg - in_deg;
+
+            if diff == 1 {
+                start_nodes += 1;
+            } else if diff == -1 {
+                end_nodes += 1;
+            } else if diff != 0 {
+                // Degree difference is not 0, 1, or -1
                 return false;
             }
         }
 
-        info!("dfs: for mut next_node loop current_node is {current_node}");
-        for mut next_node in self
-            .find_untraversed_neighbor(current_node.clone())
-            .iter_mut()
-        {
-            info!("dfs: candidate next node is {next_node}");
-            // Find the edge from current_node to next_node and mark it as traversed
-            let edge: Result<&mut Edge, NoUntraversedEdge> =
-                self.from_to_edge(&current_node, false);
-            let mut new_current_node: String = "".to_string();
+        // Valid if:
+        // - All vertices have equal in/out degree (circuit), OR
+        // - At most one start and one end vertex (path)
+        (start_nodes == 0 && end_nodes == 0) || (start_nodes == 1 && end_nodes == 1)
+    }
 
-            match edge {
-                Ok(edge) => {
-                    info!("dfs: taking Ok match arm");
-                    if edge.to == *next_node {
-                        edge.traversed = true;
-                        info!("dfs: after marking traversed, edge is {edge:?}");
-                        new_current_node = edge.clone().to.to_string();
-                        return self.dfs(start_node, new_current_node);
+    fn find_start_node(&self) -> String {
+        //
+        // Find the starting node for Hierholzer's algorithm.
+        // If there's a node with odd degree, start from there.
+        // Otherwise, start from any node with edges.
+        //
+        for (node, edges) in &self.adjacency_matrix {
+            let deg = edges.iter().filter(|e| !e.traversed).count();
+            if deg > 0 && deg % 2 == 1 {
+                return node.clone();
+            }
+        }
+        // If no odd degree vertex, find any vertex with edges
+        for (node, edges) in &self.adjacency_matrix {
+            let deg = edges.iter().filter(|e| !e.traversed).count();
+            if deg > 0 {
+                return node.clone();
+            }
+        }
+        String::new()
+    }
+
+    pub fn dfs(&mut self, start_node: String, _current_node: String) -> bool {
+        //
+        // Hierholzer's Algorithm for finding Eulerian paths/circuits.
+        // Returns true if an Eulerian path exists and all edges can be traversed
+        // starting from start_node and returning to it.
+        //
+        // Algorithm:
+        // 1. Check if an Eulerian path exists (degree conditions)
+        // 2. Use a stack to build the path iteratively
+        // 3. Mark edges as traversed throughout
+        // 4. Return true if all edges are traversed at the end
+        //
+
+        info!("dfs (Hierholzer): start_node is {start_node}");
+
+        // Check if an Eulerian path is mathematically possible
+        if !self.has_eulerian_path() {
+            info!("dfs: graph has no Eulerian path (degree conditions failed)");
+            return false;
+        }
+
+        let mut stack: Vec<String> = vec![start_node.clone()];
+        let mut path: Vec<String> = Vec::new();
+
+        while !stack.is_empty() {
+            let current = stack[stack.len() - 1].clone();
+            info!("dfs: current node on stack is {current}");
+
+            match self.find_untraversed_neighbor(current.clone()) {
+                Ok(next_node) => {
+                    // Found an untraversed edge from current to next_node
+                    // Mark the edge as traversed
+                    if let Ok(edge) = self.from_to_edge(&current, false) {
+                        if edge.to == next_node {
+                            edge.traversed = true;
+                            info!("dfs: traversing edge {current} -> {next_node}");
+                            stack.push(next_node);
+                        }
                     }
                 }
                 Err(NoUntraversedEdge) => {
-                    info!("dfs: taking Err match arm");
-                    return false;
+                    // No more untraversed edges from current node
+                    // Pop it from stack and add to path
+                    let popped = stack.pop().unwrap();
+                    path.push(popped.clone());
+                    info!("dfs: no more edges from {popped}, added to path");
                 }
             }
         }
 
-        return false;
+        info!("dfs: path traversal complete, path length is {}", path.len());
+
+        // Check if all edges were traversed
+        if self.all_traversed() {
+            info!("dfs: all edges traversed, returning true");
+            return true;
+        } else {
+            info!("dfs: not all edges traversed, returning false");
+            return false;
+        }
     }
 
     pub fn is_traversable(&mut self, queue: &mut VecDeque<Edge>) -> bool {
