@@ -17,6 +17,7 @@ pub struct Edge {
     from: String,
     to: String,
     id: u32, // 1 for first A->B edge, 2 for second etc.
+    pair_with_reverse: bool,
     traversed: bool,
 }
 
@@ -48,8 +49,78 @@ impl MultiGraph {
             from: from.to_string(),
             to: to.to_string(),
             id,
+            pair_with_reverse: false,
             traversed,
         });
+    }
+
+    pub fn add_undirected_edge(&mut self, a: &str, b: &str, id: u32, traversed: bool) {
+        //
+        // Add both directions for one physical undirected edge.
+        // Matching ids let us find the reverse counterpart.
+        //
+        let a_edges = self
+            .adjacency_matrix()
+            .entry(a.to_string())
+            .or_insert(Vec::new());
+        a_edges.push(Edge {
+            from: a.to_string(),
+            to: b.to_string(),
+            id,
+            pair_with_reverse: true,
+            traversed,
+        });
+
+        let b_edges = self
+            .adjacency_matrix()
+            .entry(b.to_string())
+            .or_insert(Vec::new());
+        b_edges.push(Edge {
+            from: b.to_string(),
+            to: a.to_string(),
+            id,
+            pair_with_reverse: true,
+            traversed,
+        });
+    }
+
+    fn mark_edge_and_counterpart_traversed(
+        &mut self,
+        from: &str,
+        to: &str,
+    ) -> Result<(), NoUntraversedEdge> {
+        //
+        // Mark one directed edge as traversed, then mark its counterpart
+        // (reverse direction with the same id) if present.
+        //
+        let mut selected_id: Option<u32> = None;
+        let mut should_mark_counterpart = false;
+
+        if let Some(edges) = self.adjacency_matrix.get_mut(from) {
+            if let Some(edge) = edges.iter_mut().find(|e| e.to == to && !e.traversed) {
+                edge.traversed = true;
+                selected_id = Some(edge.id);
+                should_mark_counterpart = edge.pair_with_reverse;
+            }
+        }
+
+        let edge_id = match selected_id {
+            Some(id) => id,
+            None => return Err(NoUntraversedEdge),
+        };
+
+        if should_mark_counterpart {
+            if let Some(edges) = self.adjacency_matrix.get_mut(to) {
+                if let Some(counterpart) = edges
+                    .iter_mut()
+                    .find(|e| e.to == from && e.id == edge_id && !e.traversed)
+                {
+                    counterpart.traversed = true;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     pub fn find_untraversed_neighbor(&mut self, from: String) -> Result<String, NoUntraversedEdge> {
@@ -81,28 +152,17 @@ impl MultiGraph {
 
     fn populate(&mut self, traversed: bool) {
         //
-        // Populate the Konigsberg graph:
-        // 1. Add the seven bridge edges (A,B), (B,C) etc.
-        //    The first bridge from A->B is (A,B,1) and the second is (A,B,2).
-        //    All edges are undirected/bidirectional.
+        // Populate the Konigsberg graph.
+        // Keep bidirectional entries for neighbor lookup using paired edges,
+        // so traversing one direction marks its reverse counterpart too.
         //
-        self.add_edge("A", "B", 1, traversed); // all from A
-        self.add_edge("A", "B", 2, traversed);
-        self.add_edge("A", "D", 1, traversed);
-
-        self.add_edge("B", "A", 1, traversed); // all from B
-        self.add_edge("B", "A", 2, traversed);
-        self.add_edge("B", "C", 1, traversed);
-        self.add_edge("B", "C", 2, traversed);
-        self.add_edge("B", "D", 1, traversed);
-
-        self.add_edge("C", "B", 1, traversed); // all from C
-        self.add_edge("C", "B", 2, traversed);
-        self.add_edge("C", "D", 1, traversed);
-
-        self.add_edge("D", "A", 1, traversed); // all from D
-        self.add_edge("D", "B", 1, traversed);
-        self.add_edge("D", "C", 1, traversed);
+        self.add_undirected_edge("A", "B", 1, traversed);
+        self.add_undirected_edge("A", "B", 2, traversed);
+        self.add_undirected_edge("A", "D", 1, traversed);
+        self.add_undirected_edge("B", "C", 1, traversed);
+        self.add_undirected_edge("B", "C", 2, traversed);
+        self.add_undirected_edge("B", "D", 1, traversed);
+        self.add_undirected_edge("C", "D", 1, traversed);
     }
 
     fn display(&mut self) {
@@ -186,7 +246,9 @@ impl MultiGraph {
 
     fn degree(&self, node: &str) -> usize {
         //
-        // Count the number of untraversed edges from the given node (out-degree).
+        // For an undirected graph (represented with bidirectional edges),
+        // count the degree of a node by counting outgoing untraversed edges only.
+        // (Since edges are bidirectional, counting out-edges gives the correct degree.)
         //
         match self.adjacency_matrix.get(node) {
             Some(edges) => edges.iter().filter(|e| !e.traversed).count(),
@@ -194,51 +256,25 @@ impl MultiGraph {
         }
     }
 
-    fn in_degree(&self, node: &str) -> usize {
-        //
-        // Count the number of untraversed edges coming into the given node (in-degree).
-        //
-        let mut count = 0;
-        for edges in self.adjacency_matrix.values() {
-            for edge in edges.iter() {
-                if edge.to == node && !edge.traversed {
-                    count += 1;
-                }
-            }
-        }
-        count
-    }
-
     fn has_eulerian_path(&self) -> bool {
         //
-        // Check if an Eulerian path exists in this directed graph.
-        // For a directed graph:
-        // - Eulerian circuit exists if every vertex has in-degree = out-degree
-        // - Eulerian path exists if at most one vertex has (out-degree - in-degree = 1)
-        //   and at most one vertex has (in-degree - out-degree = 1)
+        // Check if an Eulerian path exists in this undirected graph.
+        // An undirected graph has an Eulerian path iff:
+        // - All vertices with nonzero degree are connected, AND
+        // - Either all vertices have even degree (Eulerian circuit), OR
+        // - Exactly 2 vertices have odd degree (Eulerian path between them)
         //
-        let mut start_nodes = 0;  // vertices with out-degree - in-degree = 1
-        let mut end_nodes = 0;    // vertices with in-degree - out-degree = 1
-
+        let mut odd_degree_count = 0;
+        
         for node in self.adjacency_matrix.keys() {
-            let out_deg = self.degree(node) as i32;
-            let in_deg = self.in_degree(node) as i32;
-            let diff = out_deg - in_deg;
-
-            if diff == 1 {
-                start_nodes += 1;
-            } else if diff == -1 {
-                end_nodes += 1;
-            } else if diff != 0 {
-                // Degree difference is not 0, 1, or -1
-                return false;
+            let deg = self.degree(node);
+            if deg > 0 && deg % 2 == 1 {
+                odd_degree_count += 1;
             }
         }
-
-        // Valid if:
-        // - All vertices have equal in/out degree (circuit), OR
-        // - At most one start and one end vertex (path)
-        (start_nodes == 0 && end_nodes == 0) || (start_nodes == 1 && end_nodes == 1)
+        
+        // Valid if 0 odd vertices (circuit) or 2 odd vertices (path)
+        odd_degree_count == 0 || odd_degree_count == 2
     }
 
     fn find_start_node(&self) -> String {
@@ -278,14 +314,9 @@ impl MultiGraph {
 
         info!("dfs (Hierholzer): start_node is {start_node}");
 
-        // Check if an Eulerian path is mathematically possible
-        if !self.has_eulerian_path() {
-            info!("dfs: graph has no Eulerian path (degree conditions failed)");
-            return false;
-        }
-
         let mut stack: Vec<String> = vec![start_node.clone()];
         let mut path: Vec<String> = Vec::new();
+        let mut last_visited = start_node.clone();
 
         while !stack.is_empty() {
             let current = stack[stack.len() - 1].clone();
@@ -293,14 +324,14 @@ impl MultiGraph {
 
             match self.find_untraversed_neighbor(current.clone()) {
                 Ok(next_node) => {
-                    // Found an untraversed edge from current to next_node
-                    // Mark the edge as traversed
-                    if let Ok(edge) = self.from_to_edge(&current, false) {
-                        if edge.to == next_node {
-                            edge.traversed = true;
-                            info!("dfs: traversing edge {current} -> {next_node}");
-                            stack.push(next_node);
-                        }
+                    // Mark the chosen edge and its counterpart (reverse edge with same id).
+                    if self
+                        .mark_edge_and_counterpart_traversed(&current, &next_node)
+                        .is_ok()
+                    {
+                        info!("dfs: traversing edge {current} -> {next_node}");
+                        last_visited = next_node.clone();
+                        stack.push(next_node);
                     }
                 }
                 Err(NoUntraversedEdge) => {
@@ -315,14 +346,14 @@ impl MultiGraph {
 
         info!("dfs: path traversal complete, path length is {}", path.len());
 
-        // Check if all edges were traversed
-        if self.all_traversed() {
-            info!("dfs: all edges traversed, returning true");
+        // Success requires consuming all edges and ending where we started.
+        if self.all_traversed() && last_visited == start_node {
+            info!("dfs: all edges traversed and returned to start, returning true");
             return true;
-        } else {
-            info!("dfs: not all edges traversed, returning false");
-            return false;
         }
+
+        info!("dfs: traversal incomplete or did not return to start, returning false");
+        return false;
     }
 
     pub fn is_traversable(&mut self, queue: &mut VecDeque<Edge>) -> bool {
@@ -337,12 +368,14 @@ impl MultiGraph {
             from: "".to_string(),
             to: "".to_string(),
             id: 0,
+            pair_with_reverse: false,
             traversed: false,
         };
         let mut mru_edge = Edge {
             from: "".to_string(),
             to: "".to_string(),
             id: 0,
+            pair_with_reverse: false,
             traversed: false,
         };
         let mut original_node: String = String::new();
@@ -757,7 +790,19 @@ mod tests {
         //
         // Case 4.  The Seven Bridges of Konigsberg graph.
         //
-        // graph.populate(false);
+        graph.clear();
+        graph.populate(false);
+
+        let allowable_roots: [String; 4] = ["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()];
+
+        for start_node in &allowable_roots {
+            assert_eq!(graph.dfs(start_node.clone(), start_node.clone()), false);
+            graph.reset();
+        }
+
+        // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.
+        //assert!(graph.is_traversable(&mut queue));
+        //info!("Traversed queue is: {:?}", queue);
         // let traversable = graph.is_traversable(&mut queue);
         // if traversable {
         //     info!("Graph is traversable. Traversed graph is: {:?}", traversed);
