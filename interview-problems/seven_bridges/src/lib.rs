@@ -297,7 +297,7 @@ impl MultiGraph {
         String::new()
     }
 
-    pub fn dfs(&mut self, start_node: String, _current_node: String) -> bool {
+    pub fn dfs(&mut self, start_node: String) -> bool {
         //
         // Hierholzer's Algorithm for finding Eulerian paths/circuits.
         // Returns true if an Eulerian path exists and all edges can be traversed
@@ -739,7 +739,7 @@ mod tests {
         let allowable_roots: [String; 2] = ["A".to_string(), "B".to_string()];
 
         for start_node in allowable_roots {
-            assert_eq!(graph.dfs(start_node.clone(), start_node.clone()), true);
+            assert_eq!(graph.dfs(start_node.clone()), true);
             graph.reset();
         }
 
@@ -758,7 +758,7 @@ mod tests {
         let allowable_roots: [String; 3] = ["A".to_string(), "B".to_string(), "C".to_string()];
 
         for start_node in &allowable_roots {
-            assert_eq!(graph.dfs(start_node.clone(), start_node.clone()), false);
+            assert_eq!(graph.dfs(start_node.clone()), false);
             graph.reset();
         }
 
@@ -777,7 +777,7 @@ mod tests {
         graph.add_edge("C", "A", 1, false);
 
         for start_node in &allowable_roots {
-            assert_eq!(graph.dfs(start_node.clone(), start_node.clone()), true);
+            assert_eq!(graph.dfs(start_node.clone()), true);
             graph.reset();
         }
 
@@ -794,7 +794,7 @@ mod tests {
         let allowable_roots: [String; 4] = ["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()];
 
         for start_node in &allowable_roots {
-            assert_eq!(graph.dfs(start_node.clone(), start_node.clone()), false);
+            assert_eq!(graph.dfs(start_node.clone()), false);
             graph.reset();
         }
 
