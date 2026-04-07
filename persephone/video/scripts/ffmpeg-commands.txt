@@ -1,0 +1,37 @@
+1. Combine All Images into a Basic Slideshow
+Rename your images sequentially (img1.jpg, img2.jpg, etc.). This creates a video where each image stays on screen for 5 seconds.
+
+ffmpeg -framerate 1/5 -i img%d.jpg -c:v libx264 -pix_fmt yuv420p -crf 18 proposal_draft.mkv
+
+2. Create the "Technical Scan" Fade (2-Image Blend)
+If you want to fade from the clean docking image (dock_1.jpg) to the highlighted circling image (dock_2.jpg) over 6 seconds:
+
+ffmpeg -loop 1 -t 3 -i dock_1.jpg -loop 1 -t 3 -i dock_2.jpg \
+-filter_complex "[0:v][1:v]blend=all_expr='A*(1-T)+B*T':shortest=1" \
+-c:v libx264 -pix_fmt yuv420p docking_highlight.mkv
+
+3. Add Your Voiceover (Muxing)
+Once you have your audio file (voiceover.mp3) and your silent video (proposal.mkv), use this to combine them:
+
+ffmpeg -i proposal.mkv -i voiceover.mp3 -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 final_proposal.mkv
+
+Pro Tip: If you want the video to be exactly as long as your audio, you can add -shortest to the end of the command in Step 3.
+
+4. The "One-Size-Fits-All" Fix
+If your images have different dimensions, use this "scaling" command to force them all into 1080p so the video doesn't error out:
+
+ffmpeg -framerate 1/5 -i img%d.jpg -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" -c:v libx264 -pix_fmt yuv420p proposal_fixed.mkv
+
+Production Assembly Tip
+To create the actual "animation" effect in your final .mkv file, you can take this image into a video editor and add a simple "Pulse" or "Rotate" filter to the circular element.
+If you are using FFmpeg to assemble the final video, you can even overlay a separate transparent "circle" video file on top of this still image with this command:
+
+ffmpeg -i habitat_robot.jpg -vf "movie=circle_animation.mov,scale=200:200 [overlay]; [in][overlay] overlay=x=500:y=600" -c:v libx264 proposal_clip.mkv
+
+Voiceover: Since I cannot export audio, I recommend using a tool like ElevenLabs for a professional narrator voice. You can paste the script above directly into their "Speech Synthesis."
+
+Final Checklist for Your Proposal:
+Audio Sync: If you record your own voiceover, you can add it to the final MKV using -i your_audio.mp3 -c:a copy.
+Resolution: Ensure all your generated images are the same size (e.g., 1920x1080) before running the commands to avoid errors.
+Scale: If the images are different sizes, add -vf "scale=1920:1080" to your command.
+
