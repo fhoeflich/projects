@@ -23,14 +23,12 @@ pub struct Edge {
 
 #[derive(Debug)]
 pub struct MultiGraph {
-    total_edges: u8,
     adjacency_matrix: HashMap<String, Vec<Edge>>,
 }
 
 impl MultiGraph {
     pub fn new() -> MultiGraph {
         MultiGraph {
-            total_edges: 7,
             adjacency_matrix: HashMap::new(),
         }
     }
@@ -729,11 +727,10 @@ mod tests {
         let mut graph = MultiGraph::new();
         //let mut queue: std::collections::VecDeque<T> = VecDeque::new();
         let mut traversable = false;
-
         let _ = simple_logger::init();
 
         //
-        // Case 1.  A simple two-node graph which is traversable.
+        // Case 1.  A simple two-node graph which IS traversable.
         //			A->B, B->A
         //
         graph.add_edge("A", "B", 1, false);
@@ -765,12 +762,12 @@ mod tests {
             graph.reset();
         }
 
-        // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.
-        //assert!(graph.is_traversable(&mut queue));
+        // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.  In this case, the stack should be empty.
+        //assert!(!graph.is_traversable(&mut queue));
         //info!("Traversed queue is: {:?}", queue);
 
         //
-        // Case 3.  A simple three-node graph which is traversable.
+        // Case 3.  A simple three-node graph which IS traversable.
         //            A->B, B->C, C->A (or any cyclic permutation
         //            thereof, e.g. A->C, C->B, B->A).
         //
@@ -785,7 +782,8 @@ mod tests {
         }
 
         // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.
-        // assert!(!graph.is_traversable(&mut queue));
+        //assert!(graph.is_traversable(&mut queue));
+        //info!("Traversed queue is: {:?}", queue);
 
         //
         // Case 4.  The Seven Bridges of Konigsberg graph.
@@ -800,21 +798,8 @@ mod tests {
             graph.reset();
         }
 
-        // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.
-        //assert!(graph.is_traversable(&mut queue));
+        // XXX: enable these when a stack or queue has been implemented to track the final path through the graph.  In this case, the stack should be empty.
+        //assert!(!graph.is_traversable(&mut queue));
         //info!("Traversed queue is: {:?}", queue);
-        // let traversable = graph.is_traversable(&mut queue);
-        // if traversable {
-        //     info!("Graph is traversable. Traversed graph is: {:?}", traversed);
-        // } else {
-        //     info!("Graph is not traversable.");
-        // }
     }
-
-    // #[test]
-    // fn test_konigsberg() {
-    //     let mut graph = MultiGraph::new();
-
-    //     graph.populate(false);
-    // }
 }
