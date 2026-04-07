@@ -1,10 +1,8 @@
-#![allow(unused)]
+//#![allow(unused)]
 
-use log::{info, trace, warn};
-use simple_logger::*;
+//use log::{info, trace, warn};
+use log::{info};
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::fmt;
-use std::io::Error;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct NodeNotInGraph; // custom error type if node is not found in graph
@@ -178,9 +176,9 @@ impl MultiGraph {
         //
         // Reset all edges of the graph to not traversed.
         //
-        for (node, edgevec) in self.adjacency_matrix() {
+        for (_node, edgevec) in self.adjacency_matrix() {
             // info!("reset: node is {node}, edgevec is {edgevec:?}\n");
-            for mut edge in edgevec.iter_mut() {
+            for edge in edgevec.iter_mut() {
                 //info!("reset: setting traversed to false for edge {edge:?}");
                 edge.traversed = false;
             }
@@ -192,7 +190,7 @@ impl MultiGraph {
         //
         // Empty the graph of all edges.
         //
-        for (node, edgevec) in self.adjacency_matrix() {
+        for (_node, edgevec) in self.adjacency_matrix() {
             //info!("clear: clearing all edges in vec {edgevec:?}");
             edgevec.clear();
         }
@@ -203,7 +201,7 @@ impl MultiGraph {
         // Test that all edges of the graph are traversed (true)
         // otherwise at least one is untraversed (false).
         //
-        for (node, edgevec) in self.adjacency_matrix() {
+        for (_node, edgevec) in self.adjacency_matrix() {
             //info!("all_traversed: node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter_mut() {
                 //info!("all_traversed: processing edge {edge:?}");
@@ -227,7 +225,7 @@ impl MultiGraph {
         //
         // Map a from node to an Edge with the indicated `traversed' value.
         //
-        for (node, edgevec) in self.adjacency_matrix() {
+        for (_node, edgevec) in self.adjacency_matrix() {
             //info!("from_to_edge: node is {node}, edgevec is {edgevec:?}\n");
             for edge in edgevec.iter_mut() {
                 //info!("from_to_edge: processing edge {edge:?}");
@@ -361,14 +359,7 @@ impl MultiGraph {
         // in arriving back at the starting node, otherwise return false.
         // If true, the traversed graph is passed back in `traversed'.
         //
-        let mut traversable: bool;
-        let mut final_edge = Edge {
-            from: "".to_string(),
-            to: "".to_string(),
-            id: 0,
-            pair_with_reverse: false,
-            traversed: false,
-        };
+        let traversable: bool;
         let mut mru_edge = Edge {
             from: "".to_string(),
             to: "".to_string(),
@@ -378,8 +369,8 @@ impl MultiGraph {
         };
         let mut original_node: String = String::new();
 
-        for (node, mut edgevec) in self.adjacency_matrix() {
-            for mut edge in edgevec.iter_mut() {
+        for (_node, edgevec) in self.adjacency_matrix() {
+            for edge in edgevec.iter_mut() {
                 //
                 // Save the original node we started from.  We should
                 // finish up here in a successful traversal.
@@ -726,7 +717,6 @@ mod tests {
     fn test_is_traversable() {
         let mut graph = MultiGraph::new();
         //let mut queue: std::collections::VecDeque<T> = VecDeque::new();
-        let mut traversable = false;
         let _ = simple_logger::init();
 
         //
