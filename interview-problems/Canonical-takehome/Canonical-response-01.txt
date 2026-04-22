@@ -1,0 +1,47 @@
+Q1. code-snippit.c
+A. Explain what the code is doing
+	This driver snippet is initializing a data structure containing
+configuration information for a device.  From a series of structures containing
+read-only values, it dynamically allocates a duplicate of each one from the
+heap and places the pointer to it into a field of struct wilc.  These
+duplicates are done with GFP_KERNEL since it's permissible to sleep at driver
+initialization time (it would not be in, say, an interrupt service procedure).
+The memory allocations could fail if there isn't enough memory available and
+this routine won't keep retrying the allocation if it does fail - it will just
+return -ENOMEM.  If the driver was dynamically loaded when initialization
+fails, it will be unloaded.
+
+	The duplications are done using kmemdup().  In recent kernels (6.9+),
+this can be made to cause a number of favorable side effects:
+	o  alloc_hooks() permits profiling for this memory if that is enabled.
+	o  The __FORTIFY_INLINE attribute provides for increased buffer
+		overflow capability.  In particular, it enables compile-time detection
+		if enough information about the data structure is provided (which it
+		has been here) and correction before you ever get to runtime.
+		It also provides for runtime error detection when appropriate.
+		This can lead to actions, possibly platform-specific, to be taken
+		(via fortify_panic()) if and when a size is passed which is greater
+		than the size of the source buffer to be duplicated.
+
+	The routine then fills in each str_val with firmware version/MAC address/
+	RES_INFO data and lengths, terminating with a WID_NIL entry by convention.
+
+B. See if you spot any errors and enumerate them if you find one or more
+	i.  kzalloc_obj() call.
+
+	I imagine that line 393 in the original file trips up some devs:
+
+	str_vals = kzalloc_obj(*str_vals);
+
+	str_vals is uninitialized at this point, so dereferencing it gives you
+	stack garbage.  But all that's important here is the *size* of the
+	argument, not its contents. :-@)  I looked it up and Linus himself made
+	this change.  While that's no guarantee of correctness, it's enough reason
+	to consider the line carefully before answering.  Other calls to
+	kzalloc_obj() throughout the kernel code look similar to this one so
+	it's a common pattern.
+	=> So this is *not* an error, just worth noting.
+
+C. If you find any errors, explain the issue(s) and how you would resolve them
+
+	I did not find any errors.

@@ -1,0 +1,14 @@
+Responses to kernel engineer candidate test
+-------------------------------------------
+Q1. code-snippit.c
+a. Explain what the code is doing
+b. See if you spot any errors and enumerate them if you find one or more
+c. If you find any errors, explain the issue(s) and how you would resolve them
+
+Q2. Kernel Development Exercise
+
+Q3. Kernel Test and Verification
+
+Q4. Kernel Backporting and Git Usage
+
+Q5. Debian Packaging
