@@ -1,0 +1,30 @@
+Topic: GCMS analysis
+
+I. What is GCMS?
+	A. Explain gas chromatography and mass spectrometry
+	B. Show a sample report
+	C. GCMS equipment cost/capabilities
+	D. GCMS service providers/pricing
+	E. The chemistry knowledge required
+	F. The skill required for interpretation of reports
+
+II. Why do we care?
+	A. Perfume analysis
+	B. Dupes/clones!
+	C. Authentication - ambergris and other frequently-faked materials
+	D. Purity - oud oils
+
+III. Do perfumers *need* GCMS?
+	A. Composers/artisans - perhaps, perhaps not
+	B. Dup makers - yes
+
+IV. Simple GCMS example (find a chemist who can do the explaining. Can
+		PA help?  OSU?)
+	A. 99.5% EtOH - mostly EtOH, some trace materials
+	B. Basic accord with 3x synthetics
+
+V. Complex GCMS example(s)
+	A. Perfume 1
+	B. Perfume 2
+	C. Perfume 3
+
