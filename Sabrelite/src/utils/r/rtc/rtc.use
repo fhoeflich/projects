@@ -1,0 +1,87 @@
+Update the current time based on the time from the specified clock:
+%C [-b base[,reg_shift[,mem_map[,c_offset]]]]
+    [-l] [-r rate] [-S seconds] clock_type clock_options
+
+Set the time of the specified clock to the current time:
+%C -s [-b base[,reg_shift[,mem_map[,c_offset]]]]
+    [-l] clock_type clock_options
+
+Set or enable/disable RTC alarm:
+%C [-a alarm_enable] [-A alarm_time] clock_type clock_options
+
+Options:
+
+Note: All other options are ignored when RTC alarm-related commands (-a or -A) are used.
+
+ -l         Hardware clock is in local time (instead of UTC).
+ -r rate    Rate at which to adjust the time if within 60 sec. (default 100)
+ -s         Set clock to current OS time.
+ -S seconds Maximum number of seconds difference between current
+            time and new time before jam loading rather than
+            slowly adjusting (see -r to adjust convergence speed). (default 60)
+ -b base[,reg_shift[,mem_map[,c_offset]]]
+            The location of the RTC chip:
+            base - base address of the chip.
+            reg_shift - spacing of the device registers as a power of 2. The default reg_shift is 0.
+            mem_map - memory or I/O space.
+            c_offset - offset to the century byte in NVRAM.
+ -A alarm_time
+            Set RTC alarm to the specified time. The format of the
+            alarm_time string varies depending on the clock type being
+            used. See the alarm_time section below. This option can only
+            be specified once per utility use (i.e. to set the time for 2
+            alarms, need to run "rtc -A alarm_time" twice).
+ -a alarm_enable
+            Enable or disable RTC alarm. The format of the
+            alarm_enable string varies depending on the clock type
+            being used. See the alarm_enable section below. This
+            option can only be specified once per utility use (i.e. to
+            enable 2 alarms, need to run "rtc -a alarm_enable" twice).
+Where:
+    alarm_time string format is specific to the clock type:
+    Type                    String format
+    mx8sc                   "<seconds>"
+    pmqcom                  "<seconds>"
+                            Note: The pmqcom alarm is automatically disabled after using the "-A" option.
+                                  It must be re-enabled manually using the "-a" option.
+    ds3232                  "<alarm #>,<hh:mm:ss>[,<day of week>[,<date of month>]]"
+                            Where <hh:mm:ss> is in 24 hour format, <day of week> is a value from 1-7 (Sunday-Saturday) and <date of month> is from 1-31.
+                            Notes:
+                              - Two alarms are available <alarm #> 1 and 2 are valid.
+                              - If alarms are enabled, setting a new alarm does not disable the alarms.
+                              - The second alarm does not support seconds settings. The value of the seconds for that alarm is safely ignored.
+                              - A <day of week> or <date of month> value of "0" will be safely ignored.
+                              - If <date of month> is specified, <day of week> must be specified as a "0".
+                              - If <day of week> is a valid non-zero value, <date of month> value is safely ignored and alarm is set to weekly.
+                              - The DS3232 alarm modes for every second, specific seconds, or specific minutes and seconds are not supported.
+                            Example:  To set alarm 1 for 6pm every day, use "rtc -a1,1 -A1,18:00:00"
+                                      To set alarm 2 for 4am every Wednesday, use "rtc -a2,1 -A2,04:00:00,4"
+                                      To set alarm 1 for 2:30pm every 15th date of the month, use "rtc -a1,1 -A1,14:30:00,0,15"
+
+    alarm_enable string format is specific to the clock type:
+    Type                    String format
+    mx8sc                   "<enable>"
+    pmqcom                  "<enable>"
+                            Example: To enable the alarm, use "rtc -a1 pmqcom"
+    ds3232                  "<alarm #>,<enable>"
+                            Notes:Enabling and disabling an alarm clears the alarm's status flag; i.e. dismisses the alarm signal.
+                            Example:  To enable alarm 1, with an active low interrupt signal use "rtc -a1,1 ds3232"
+                                      To disable alarm 2, use "rtc -a2,0 ds3232"
+
+    clock_type is the type of clock hardware. Normally "hw" would
+            be specified to allow rtc to determine the type of clock automatically.
+            Type "rtc" to get a list of acceptable clock_type names.
+
+    clock_options are options specific to the clock type:
+    Type                    Options
+    m41t00                  I2C device name (e.g. /dev/i2c0)
+    rx6110                  <I2C driver path>[:<I2C device address>] (e.g. "/dev/i2c0:0x32")
+
+Note:
+    -l      affects the time in both reading and writing.
+    -s      in conjunction with a net clock type will cause the
+            date on the specified node to be changed to the current OS
+            time of the node on which this command is executed.
+    -r      rate at which to slow down or speed up the clock until
+            it catches up. The rate is turned into a percentage of the
+            form 1/rate. The default rate of 100 is 1 percent (1/100).

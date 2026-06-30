@@ -1,0 +1,12 @@
+%C - GPIO Resource Manager
+
+Usage:
+%C [-N path] [-U uid[:gid[,sup_gid]*]]
+
+Options:
+-N path                         Specify the location where the GPIO resource manger will attach to.
+                                The default path is /dev/gpio
+-U uid[:gid[,sup_gid]*] or      Run as the given user (or uid) with the given group ids. Note that if
+    -U user_name[,sup_gid]*     the user is specified by name, the given groups are added to that user's
+                                group list. If the user is specified by uid and no groups are listed,
+                                the process inherits the parent process' group list.

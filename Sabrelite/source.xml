@@ -1,0 +1,24 @@
+<!-- Unless otherwise specified, values/attributes are free-form strings -->
+    <!-- type is currently either BSP or SourceOnly -->
+<sourcePackage type="BSP" id="hw.ezurio-nitrogen8mp-smarc">
+    <title>Ezurio Nitrogen8MP SMARC board</title>
+    <release>0.0.2</release>
+    <license>QDL and Apache II</license>
+    <requires>package: com.qnx.${baselineId}.target.screen.device_input_screen</requires>
+    <requires>package: com.qnx.${baselineId}.target.screen.board.imx8mp</requires>
+    <requires>package: com.qnx.${baselineId}.target.screen.base</requires>
+    <requires>package: com.qnx.${baselineId}.target.screen.fonts.engine</requires>
+    <requires>package: com.qnx.${baselineId}.target.screen.img_codecs</requires>
+    <requires>package: com.qnx.${baselineId}.target.pci.hw.nxp_imx8m_cpu</requires>
+    <requires>package: com.qnx.${baselineId}.target.fs.flash3 (>= 0.0.2)</requires>
+    <requires>package: com.qnx.${baselineId}.target.drivers.flash (>= 0.0.2)</requires>
+    <startup>startup-nitrogen8mp-smarc</startup>
+    <description>This board support package is for the Ezurio Nitrogen8MP SMARC board.</description>
+    <vendor>BlackBerry Limited</vendor>
+    <qnxTargetVersion>SDP8.0</qnxTargetVersion>
+    <qnxTargetCPU variant="aarch64le">AARCH64</qnxTargetCPU>
+    <!-- type is currently only import, will be extended in the future. -->
+    <bsp type="import">
+        <import id="ezurio-nitrogen8mp-smarc">images/nitrogen8mp-smarc.build</import>
+    </bsp>
+</sourcePackage>

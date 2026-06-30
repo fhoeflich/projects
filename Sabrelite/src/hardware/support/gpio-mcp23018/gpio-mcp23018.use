@@ -1,0 +1,22 @@
+%C - Utility for the MCP23018 GPIO expander
+
+Usage:
+%C -a i2c_addr -b i2c_bus -p pin [options]
+
+Options:
+-a i2c_addr     Set the MCP23018 I2C address
+-b i2c_bus      Set the MCP23018 I2C bus index
+-p pin          Set the GPIO pin number being accessed
+-i              Configure the specified GPIO pin as an input
+-o state        Configure the specified GPIO pin as output and set its state
+-w state        Set the output state of the specified GPIO pin
+
+Examples:
+- Configure GPB7 as an input
+%C -a 0x20 -b 6 -p 15 -i
+
+- Configure GPA6 as an output high
+%C -a 0x20 -b 6 -p 6 -o1
+
+- Print the state of GPA6
+%C -a 0x20 -b 6 -p 6

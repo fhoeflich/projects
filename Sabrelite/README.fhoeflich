@@ -1,0 +1,7 @@
+This is my repository for work on the QEMU issue
+
+https://gitlab.com/qemu-project/qemu/-/work_items/224
+
+to work around an issue with conflated interrupts on ENET_INT_MAC and
+ENET_INT_TS_TIMER which break Ethernet initialization on the Sabrelite
+SOM.

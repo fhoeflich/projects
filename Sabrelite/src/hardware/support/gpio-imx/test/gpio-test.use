@@ -1,0 +1,30 @@
+%C - Utility for the GPIO Resource Manager
+
+Usage:
+%C -b bank -p pin [options]
+
+Note:
+- This utility does *not* configure the IOMUXC.
+  The IOMUXC pin muxing may need to be configured separately.
+
+Options:
+-b bank         Set the GPIO bank number
+-p pin          Set the GPIO pin number being accessed
+-i              Configure the specified GPIO pin as an input
+-o state        Configure the specified GPIO pin as output and set its state
+-w state        Set the output state of the specified GPIO pin
+-N path         Specify the location of the GPIO resource manger to attach to
+                The default path is /dev/gpio
+
+Examples:
+- Configure GPIO3[12] as an input
+%C -b3 -p12 -i
+
+- Configure GPIO1[9] as an output high
+%C -b1 -p9 -o1
+
+- Set the output state of GPIO0[31] to low
+%C -b0 -p31 -w0
+
+- Print the state of GPIO5[7]
+%C -b5 -p7

@@ -1,0 +1,6 @@
+LIST=ALL
+EARLY_DIRS=lib
+LATE_DIRS=
+include recurse.mk
+CCFLAGS += -DDDR_SIZE=$(DDR_SIZE)
+ASFLAGS += -DDDR_SIZE=$(DDR_SIZE)
