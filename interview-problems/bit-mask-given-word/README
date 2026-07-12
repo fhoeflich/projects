@@ -1,0 +1,11 @@
+
+Given a word (int) `original' and two integers i and j, return the ith through the jth bits inclusive of `original' only (in place).
+
+My technique:
+1. Form a mask with ones in the ith through the jth bit positions and zeroes elsewhere.
+	a. Set int `result' to 0.
+	b. Validate i and j (neither can be larger than the highest bit of a
+		word on this platform, neither can be <0, and they cannot be equal).
+	c. Loop: For each bit position from the lesser of i and j to the greater,
+			`result' |= (1 << position).
+2. Return `result'.
